@@ -35,21 +35,31 @@ app.get('/query-llm', async (req: Request, res: Response, next: NextFunction) =>
         res.status(400).send('<h1>400 Bad Request</h1><p>Input parameter is missing or blank</p>');
         return;
     }
+    res.writeHead(200, {
+        'Content-Type': `text/event-stream`,
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive'
+    });
+    res.write('data: Waiting for ollama server...\n\n');
     const response = await ollama.chat({
         model: `${model}`,
         messages: [{ role: 'user', content: `${input}`}],
+        stream: true
     })
-    const charset: BufferEncoding = 'utf-8'
-    res.writeHead(200, {
-        'Content-Type': `text/plain; charset=${charset}`,
-        'Content-Length': Buffer.byteLength(response.message.content, charset)
-    });
-    res.end(response.message.content);
+    res.write('data: Ready\n\n');
+    for await (const part of response) {
+        res.write(`data: ${part.message.content}\n\n`);
+    }
+    res.end();
 });
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error(err.stack)
-  res.status(500).send(`<head><title>500 Internal Server Error</title></head><body><h1>500 Internal Server Error</h1><p>The server had an oopsie</p></body>`)
+    console.error(err.stack);
+    let relativeError = err;
+    if (err.cause instanceof Error) {
+        relativeError = err.cause
+    }
+    res.status(500).send(`<head><title>500 Internal Server Error</title></head><body><h1>500 Internal Server Error</h1><p>${relativeError.message}</p></body>`)
 })
 
 // Start the Express server

@@ -3,7 +3,14 @@ var responseP = document.getElementById('response-p');
 
 function writeResponse(content: string, button: HTMLElement | null) {
     if (responseP) {
-        responseP.innerHTML=content;
+        if (content == "Waiting for ollama server...") {
+            responseP.innerHTML=content;
+        } else if (content == "Ready") {
+            responseP.innerHTML="";
+        } else {
+            responseP.innerHTML+=content;
+        }
+        
     }
     if (button) {
         button.textContent = "Generate LLM Response";
@@ -18,14 +25,16 @@ function handleClick() {
     }
     const select = document.getElementById('modelSelect') as HTMLSelectElement;
     const input = document.getElementById('requestInput') as HTMLInputElement;
-    fetch(`/query-llm?input=${input.value}&model=${select.value}`)
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`HTTP Error ${response.status}`);
-        }
-        return response.text();
-    })
-    .then((responseContent) => writeResponse(responseContent, button));
+    const eventSource = new EventSource(`/query-llm?input=${input.value}&model=${select.value}`);
+    eventSource.onmessage = (event) => {
+        const data = event.data as string;
+        writeResponse(event.data, button)
+    };
+
+    eventSource.onerror = (error) => {
+        console.error('EventSource error:', error);
+        eventSource.close();
+    };
 }
 
 // Add an event listener to the button once the DOM is loaded
