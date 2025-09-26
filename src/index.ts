@@ -1,6 +1,7 @@
 import express from 'express';
 import type { NextFunction, Request, Response } from 'express';
 import { Ollama } from "ollama";
+import { Marked } from '@ts-stack/markdown';
 
 const ollama = new Ollama({ host: 'http://192.168.100.43:11434' })
 
@@ -9,7 +10,9 @@ const port: number = 3000;
 
 app.disable('x-powered-by');
 
-app.use(express.static('dist/frontend'))
+app.use('/index.js', express.static('dist/frontend/index.js'));
+
+app.use('/public', express.static('src/frontend/assets/'));
 
 app.get('/', async (req: Request, res: Response, next: NextFunction) => {
     const modelList = await ollama.list();
@@ -18,7 +21,9 @@ app.get('/', async (req: Request, res: Response, next: NextFunction) => {
       selectMenu += `<option value="${model.name}">${model.name}</option>`;
     });
     selectMenu += '</select>'
-    const pageContents: string = `<head><title>Local LLM UI</title><script type="module" src="/index.js" defer></script></head><body><h1>Local LLM UI</h1>${selectMenu}<br><input type="text" id="requestInput" name="Request" placeholder="Send a message"><br><button id="requestButton">Generate LLM Response</button><p id='response-p'>Response Will Appear here</p></body>`;
+    const title = "Local LLM UI";
+    const defaultHTMLHeaders = `<head><title>${title}</title><script type="module" src="/index.js" defer></script><link rel="stylesheet" type="text/css" href="/public/style.css"></head>`
+    const pageContents: string = `${defaultHTMLHeaders}<body><h1>${title}</h1>${selectMenu}<br><input type="text" id="requestInput" name="Request" placeholder="Send a message"><br><button id="requestButton" class="btn">Generate LLM Response</button><p id='response-p'>Response Will Appear here</p></body>`;
     const charset: BufferEncoding = 'utf-8'
     res.writeHead(200, {
         'Content-Type': `text/html; charset=${charset}`,
@@ -46,10 +51,12 @@ app.get('/query-llm', async (req: Request, res: Response, next: NextFunction) =>
         messages: [{ role: 'user', content: `${input}`}],
         stream: true
     })
-    res.write('data: Ready\n\n');
+    let full = '';
     for await (const part of response) {
-        res.write(`data: ${part.message.content}\n\n`);
+        full+= part.message.content
+        res.write(`data: ${Marked.parse(full).replaceAll("\n", "<br>")}\n\n`);
     }
+    res.write(`data: [Done]\n\n`);
     res.end();
 });
 

@@ -1,0 +1,196 @@
+body {
+    background-color: rgb(20, 20, 20);
+    font-family: sans-serif;
+    margin-top: 0px;
+  }
+
+  pre {
+    font-family: sans-serif;
+    text-align: center;
+  }
+
+  .add-bot-style {
+    font-family: sans-serif;
+    text-align: center;
+    color: rgb(255, 255, 255);
+  }
+
+  .add-bot-style > ul {
+    display: inline-block;
+    text-align: left;
+  }
+
+  .add-bot-style > ol {
+    display: inline-block;
+    text-align: left;
+  }
+
+  h1 {
+    color: rgb(255, 255, 255);
+  }
+
+  h2 {
+    color: rgb(255, 255, 255);
+  }
+
+  h4 {
+    color: #ffffff;
+    text-align: center;
+  }
+
+  p, label, ul, li {
+    color: rgb(255, 255, 255);
+  }
+
+  hr {
+    color: rgb(255, 255, 255);
+    border: solid;
+  }
+
+  .logo {
+    color: white !important;
+    text-decoration: none !important;
+  }
+
+  .main-title {
+    padding-top: 1em;
+    padding-bottom: 5px;
+    padding-left: 10px;
+    padding-right: 10px;
+    position: fixed;
+    width: 100%;
+    background-color: rgb(20, 20, 20);
+    margin-block-start: 0em;
+    margin-block-end: 0em;
+  }
+
+  noscript {
+    color: rgb(255, 255, 255);
+    text-align: center;
+  }
+
+  .main-title-text {
+    color: #fff;
+    text-decoration: none;
+  }
+
+  .t-logos {
+    width: 32px;
+    height: 32px;
+  }
+
+  .t-links:link,
+  .t-links:visited {
+    background-color: rgba(0, 0, 0, 0) !important;
+    color: white;
+    border: 2px solid rgba(100, 100, 255, 0) !important;
+    padding: 5px 10px !important;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    border-radius: 0px !important;
+  }
+
+  .t-links:hover,
+  .t-links:active {
+    background-color: rgb(100, 100, 255, 0.5) !important;
+    border: 2px solid rgb(255, 255, 255) !important;
+    padding: 5px 10px !important;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    border-radius: 10px !important;
+  }
+  
+
+  .disabledBtn {
+      background-color: rgba(100, 100, 100, 0.5);
+      color: white;
+      border: 2px solid rgba(0, 100, 255, 0);
+      padding: 15px 25px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      border-radius: 10px;
+  }
+
+  .webringBtn:link,
+  .webringBtn:visited {
+    background-color: rgba(100, 100, 255, 0.5);
+    color: white;
+    border: 2px solid rgba(100, 100, 255, 0);
+    padding: 10px 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    border-radius: 10px;
+  }
+
+  .webringBtn:hover,
+  .webringBtn:active {
+    background-color: rgba(100, 100, 255, 1);
+    border: 2px solid rgba(100, 100, 255, 0.5);
+  }
+
+
+  .btn, .btn:link,
+  .btn:visited {
+    background-color: rgba(100, 100, 255, 0.5);
+    color: white;
+    border: 2px solid rgba(100, 100, 255, 0);
+    padding: 15px 25px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    border-radius: 10px;
+  }
+
+  .btn:hover,
+  .btn:active {
+    background-color: rgba(100, 100, 255, 1);
+    border: 2px solid rgba(100, 100, 255, 0.5);
+  }
+  
+  .f-link:link,
+  .f-link:visited {
+    color: rgb(73, 73, 184) !important;
+    background-color: rgba(0, 100, 255, 0.0) !important;
+    padding: 0 !important;
+    border: rgba(0, 0, 0, 0.0);
+    text-decoration: none;
+  }
+
+  img {
+    vertical-align: middle;
+  }
+
+  .title-links {
+    font-size: 15px;
+  }
+
+  .featured-items {
+    display: flex;
+  }
+
+  .featured-item {
+    flex: 1; /* additionally, equal width */
+    display: inline-block;
+    padding: 1em;
+  }
+
+  code {
+    font-family: Consolas,"courier new";
+    color: rgb(100, 100, 255);
+    background-color: #0e0e0e;
+    padding: 2px;
+    font-size: 95%;
+  }
+
+think:before {
+  font-weight: bold;
+  content:"Thinking...";
+}
+
+think {
+    color: rgb(191, 191, 191);
+}

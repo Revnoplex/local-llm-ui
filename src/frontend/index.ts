@@ -3,24 +3,18 @@ var responseP = document.getElementById('response-p');
 
 function writeResponse(content: string, button: HTMLElement | null) {
     if (responseP) {
-        if (content == "Waiting for ollama server...") {
-            responseP.innerHTML=content;
-        } else if (content == "Ready") {
-            responseP.innerHTML="";
-        } else {
-            responseP.innerHTML+=content;
-        }
-        
+        responseP.innerHTML=content;
     }
-    if (button) {
+    if (content != "Waiting for ollama server..." && button && button.textContent != "Generate LLM Response") {
+        button.className = "btn";
         button.textContent = "Generate LLM Response";
     }
 }
 
 function handleClick() {
-    // You can add more complex logic here
     const button = document.getElementById('requestButton');
     if (button) {
+        button.className = "disabledBtn";
         button.textContent = "Fetching llm-response...";
     }
     const select = document.getElementById('modelSelect') as HTMLSelectElement;
@@ -28,11 +22,22 @@ function handleClick() {
     const eventSource = new EventSource(`/query-llm?input=${input.value}&model=${select.value}`);
     eventSource.onmessage = (event) => {
         const data = event.data as string;
+        if (data == '[Done]') {
+            eventSource.close();
+            return;
+        }
         writeResponse(event.data, button)
     };
 
     eventSource.onerror = (error) => {
+        let errorMsg = "An Error Occured";
         console.error('EventSource error:', error);
+        const target = error.target as EventSource;
+        EventSource.CONNECTING
+        if (target.readyState === EventSource.CONNECTING) {
+            errorMsg = "Lost Connection To Backend!"
+        }
+        writeResponse(errorMsg, button);
         eventSource.close();
     };
 }
