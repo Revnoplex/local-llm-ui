@@ -3,6 +3,7 @@ var responseP = document.getElementById('response-p');
 
 function writeResponse(content: string, button: HTMLElement | null) {
     if (responseP) {
+        console.log(content);
         responseP.innerHTML=content;
     }
     if (content != "Waiting for ollama server..." && button && button.textContent != "Generate LLM Response") {
@@ -30,12 +31,12 @@ function handleClick() {
     };
 
     eventSource.onerror = (error) => {
-        let errorMsg = "An Error Occured";
+        let errorMsg = "<p>An Error Occured</p>";
         console.error('EventSource error:', error);
         const target = error.target as EventSource;
         EventSource.CONNECTING
         if (target.readyState === EventSource.CONNECTING) {
-            errorMsg = "Lost Connection To Backend!"
+            errorMsg = "<p>Lost Connection To Backend!</p>"
         }
         writeResponse(errorMsg, button);
         eventSource.close();

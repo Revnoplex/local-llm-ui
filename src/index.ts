@@ -5,6 +5,17 @@ import { Marked } from '@ts-stack/markdown';
 
 const ollama = new Ollama({ host: 'http://192.168.100.43:11434' })
 
+function get2DArrayElement(accessArray: any[][], rowIndex: number, colIndex: number): any | undefined {
+  const row = accessArray[rowIndex];
+  if (row !== undefined) {
+    const element = row[colIndex];
+    if (element !== undefined) {
+      return element;
+    }
+  }
+  return undefined;
+}
+
 const app = express();
 const port: number = 3000;
 
@@ -23,7 +34,7 @@ app.get('/', async (req: Request, res: Response, next: NextFunction) => {
     selectMenu += '</select>'
     const title = "Local LLM UI";
     const defaultHTMLHeaders = `<head><title>${title}</title><script type="module" src="/index.js" defer></script><link rel="stylesheet" type="text/css" href="/public/style.css"></head>`
-    const pageContents: string = `${defaultHTMLHeaders}<body><h1>${title}</h1>${selectMenu}<br><input type="text" id="requestInput" name="Request" placeholder="Send a message"><br><button id="requestButton" class="btn">Generate LLM Response</button><p id='response-p'>Response Will Appear here</p></body>`;
+    const pageContents: string = `${defaultHTMLHeaders}<body><h1>${title}</h1>${selectMenu}<br><input type="text" id="requestInput" name="Request" placeholder="Send a message"><br><button id="requestButton" class="btn">Generate LLM Response</button><div id='response-p'><p>Response Will Appear here</p></div></body>`;
     const charset: BufferEncoding = 'utf-8'
     res.writeHead(200, {
         'Content-Type': `text/html; charset=${charset}`,
@@ -45,16 +56,34 @@ app.get('/query-llm', async (req: Request, res: Response, next: NextFunction) =>
         'Cache-Control': 'no-cache',
         'Connection': 'keep-alive'
     });
-    res.write('data: Waiting for ollama server...\n\n');
+    res.write('data: <p>Waiting for ollama server...</p>\n\n');
     const response = await ollama.chat({
         model: `${model}`,
         messages: [{ role: 'user', content: `${input}`}],
         stream: true
     })
     let full = '';
+    let thinkingPart = '';
+    let thinking = false;
+    let tmpClose = '';
     for await (const part of response) {
-        full+= part.message.content
-        res.write(`data: ${Marked.parse(full).replaceAll("\n", "<br>")}\n\n`);
+        thinking = part.message.content == "<think>" || (thinking && part.message.content != "</think>")
+        if (thinking) {
+            thinkingPart += part.message.content;
+        } else {
+            full+= part.message.content;
+        }
+
+        let rawSBTMatches = full.split("`").length - 1;
+        let tBTMatches = full.split("```").length - 1;
+        let sBTMatches = rawSBTMatches - 3*tBTMatches;
+        if (sBTMatches & 1 && !(tBTMatches & 1)) {
+            tmpClose = '`';
+        } else if (tBTMatches & 1) {
+            tmpClose = '```';
+        }
+        res.write(`data: ${"<p>"+thinkingPart.replaceAll("\n", "<br>")+"</p>"+Marked.parse(full+tmpClose).replaceAll("\n", "&#10;")}\n\n`);
+        tmpClose = '';
     }
     res.write(`data: [Done]\n\n`);
     res.end();
