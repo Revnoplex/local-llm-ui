@@ -3,7 +3,9 @@ import type { NextFunction, Request, Response } from 'express';
 import { Ollama } from "ollama";
 import { Marked } from '@ts-stack/markdown';
 
-const ollama = new Ollama({ host: 'http://192.168.100.43:11434' })
+const ollamaServer = 'http://192.168.100.43:11434';
+
+const ollama = new Ollama({ host: ollamaServer })
 
 const app = express();
 const port: number = 3000;
@@ -15,15 +17,33 @@ app.use('/index.js', express.static('dist/frontend/index.js'));
 app.use('/public', express.static('src/frontend/assets/'));
 
 app.get('/', async (req: Request, res: Response, next: NextFunction) => {
-    const modelList = await ollama.list();
-    let selectMenu = '<select name="models" id="modelSelect">';
-    modelList.models.forEach(model => {
-      selectMenu += `<option value="${model.name}">${model.name}</option>`;
-    });
-    selectMenu += '</select>'
+    let selectMenu = '';
+    let promptElements = '';
+
+    try {
+        const modelList = await ollama.list();
+        selectMenu = '<select name="models" id="modelSelect">';
+        modelList.models.forEach(model => {
+        selectMenu += `<option value="${model.name}">${model.name}</option>`;
+        });
+        selectMenu += '</select>'
+        promptElements = '<button id="requestButton" class="btn">Generate LLM Response</button>';
+    } catch (error) {
+        selectMenu = `<p>Failed to list models!</p>`
+        promptElements = '<button id="requestButton" class="btn" disabled>Generate LLM Response</button>';
+        if (error instanceof Error) {
+            if (error.cause instanceof Error && 'errno' in error.cause && 'syscall' in error.cause) {
+                error.cause as NodeJS.ErrnoException;
+                if (typeof error.cause.errno === 'number' && error.cause.syscall == 'connect') {
+                    selectMenu = `<p>Cannot connect to ollama server! Is it running?</p>`
+                }
+            }
+        }
+        selectMenu+= `<p>Refresh the page to try again.</p>`
+    }
     const title = "Local LLM UI";
     const defaultHTMLHeaders = `<head><title>${title}</title><script type="module" src="/index.js" defer></script><link rel="stylesheet" type="text/css" href="/public/style.css"></head>`
-    const pageContents: string = `${defaultHTMLHeaders}<body><h1>${title}</h1>${selectMenu}<br><input type="text" id="requestInput" name="Request" placeholder="Send a message"><br><button id="requestButton" class="btn">Generate LLM Response</button><div id='response-p'><p>Response Will Appear here</p></div></body>`;
+    const pageContents: string = `${defaultHTMLHeaders}<body><h1>${title}</h1>${selectMenu}<br><input type="text" id="requestInput" name="Request" placeholder="Send a message"><br>${promptElements}<div id='response-p'><p>Response Will Appear here</p></div></body>`;
     const charset: BufferEncoding = 'utf-8'
     res.writeHead(200, {
         'Content-Type': `text/html; charset=${charset}`,

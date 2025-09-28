@@ -7,7 +7,7 @@ function writeResponse(content: string, button: HTMLElement | null) {
         responseP.innerHTML=content;
     }
     if (content != "Waiting for ollama server..." && button && button.textContent != "Generate LLM Response") {
-        button.className = "btn";
+        button.removeAttribute('disabled');
         button.textContent = "Generate LLM Response";
     }
 }
@@ -15,7 +15,7 @@ function writeResponse(content: string, button: HTMLElement | null) {
 function handleClick() {
     const button = document.getElementById('requestButton');
     if (button) {
-        button.className = "disabledBtn";
+        button.setAttribute('disabled', '');
         button.textContent = "Fetching llm-response...";
     }
     const select = document.getElementById('modelSelect') as HTMLSelectElement;

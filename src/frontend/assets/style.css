@@ -105,18 +105,6 @@ body {
     display: inline-block;
     border-radius: 10px !important;
   }
-  
-
-  .disabledBtn {
-      background-color: rgba(100, 100, 100, 0.5);
-      color: white;
-      border: 2px solid rgba(0, 100, 255, 0);
-      padding: 15px 25px;
-      text-align: center;
-      text-decoration: none;
-      display: inline-block;
-      border-radius: 10px;
-  }
 
   .webringBtn:link,
   .webringBtn:visited {
@@ -149,10 +137,21 @@ body {
     border-radius: 10px;
   }
 
-  .btn:hover,
-  .btn:active {
+  .btn:hover:not(:disabled),
+  .btn:active:not(:disabled) {
     background-color: rgba(100, 100, 255, 1);
     border: 2px solid rgba(100, 100, 255, 0.5);
+  }
+
+  .btn:disabled {
+    background-color: rgba(100, 100, 100, 0.5);
+    color: white;
+    border: 2px solid rgba(0, 100, 255, 0);
+    padding: 15px 25px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    border-radius: 10px;
   }
   
   .f-link:link,
