@@ -42,8 +42,27 @@ app.get('/', async (req: Request, res: Response, next: NextFunction) => {
         selectMenu+= `<p>Refresh the page to try again.</p>`
     }
     const title = "Local LLM UI";
-    const defaultHTMLHeaders = `<head><title>${title}</title><script type="module" src="/index.js" defer></script><link rel="stylesheet" type="text/css" href="/public/style.css"></head>`
-    const pageContents: string = `${defaultHTMLHeaders}<body><h1>${title}</h1>${selectMenu}<br><input type="text" id="requestInput" name="Request" placeholder="Send a message"><br>${promptElements}<div id='response-p'><p>Response Will Appear here</p></div></body>`;
+    const pageContents: string = `\
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>${title}</title>
+        <script type="module" src="/index.js" defer></script>
+        <link rel="stylesheet" type="text/css" href="/public/style.css">
+    </head>
+    <body>
+        <h1>${title}</h1>
+        <div id='response-p'>
+            <p>Response Will Appear here</p>
+        </div>
+        <div class='input-console'>
+            ${selectMenu}
+            <input type="text" id="requestInput" name="Request" placeholder="Send a message">
+            ${promptElements}
+        </div>
+    </body>
+</html>\
+    `;
     const charset: BufferEncoding = 'utf-8'
     res.writeHead(200, {
         'Content-Type': `text/html; charset=${charset}`,
