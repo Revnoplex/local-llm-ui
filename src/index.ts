@@ -5,17 +5,6 @@ import { Marked } from '@ts-stack/markdown';
 
 const ollama = new Ollama({ host: 'http://192.168.100.43:11434' })
 
-function get2DArrayElement(accessArray: any[][], rowIndex: number, colIndex: number): any | undefined {
-  const row = accessArray[rowIndex];
-  if (row !== undefined) {
-    const element = row[colIndex];
-    if (element !== undefined) {
-      return element;
-    }
-  }
-  return undefined;
-}
-
 const app = express();
 const port: number = 3000;
 
