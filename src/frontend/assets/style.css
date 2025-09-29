@@ -207,6 +207,8 @@ think {
   justify-content: center;
   align-items: center;
   display: flex;
+  width: 100%; 
+  gap: 10px;
 }
 
 #response-p{
@@ -222,4 +224,49 @@ think {
   min-height: 0;
   flex: 1 1 auto;
   overflow-y: auto;
+  margin-bottom: 10px;
+}
+
+#requestInput {
+  color: white;
+  background-color: transparent;
+  border: 2px solid hsl(0, 0%, 100%);
+  padding: 10px;
+  /* text-align: center; */
+  font-size: 1em;
+  text-decoration: none;
+  display: inline-block;
+  border-radius: 10px;
+  flex-grow: 1;   
+  min-width: 0;
+}
+
+#requestInput:disabled {
+  color: rgba(255,255,255,0.5);
+  background-color: transparent;
+  border: 2px solid hsl(0, 0%, 100%);
+  padding: 10px;
+  /* text-align: center; */
+  font-size: 1em;
+  text-decoration: none;
+  display: inline-block;
+  border-radius: 10px;
+  flex-grow: 1;   
+  min-width: 0;
+}
+
+#modelSelect {
+  color: white;
+  background-color: transparent;
+  border: 2px solid hsl(0, 0%, 100%);
+  padding: 10px;
+  /* text-align: center; */
+  font-size: 1em;
+  text-decoration: none;
+  display: inline-block;
+  border-radius: 10px;
+}
+
+.modelOption {
+  background-color: rgb(20, 20, 20); /* Your desired background color for all options */
 }

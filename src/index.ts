@@ -38,22 +38,22 @@ app.get('/', async (req: Request, res: Response, next: NextFunction) => {
         const modelList = await ollama.list();
         selectMenu = '<select name="models" id="modelSelect">';
         modelList.models.forEach(model => {
-        selectMenu += `<option value="${model.name}">${model.name}</option>`;
+        selectMenu += `<option class='modelOption' value="${model.name}">${model.name}</option>`;
         });
         selectMenu += '</select>'
         promptElements = '<button id="requestButton" class="btn">Generate LLM Response</button>';
     } catch (error) {
-        selectMenu = `<p>Failed to list models!</p>`
+        selectMenu = `<p>Failed to list models! `
         promptElements = '<button id="requestButton" class="btn" disabled>Generate LLM Response</button>';
         if (error instanceof Error) {
             if (error.cause instanceof Error && 'errno' in error.cause && 'syscall' in error.cause) {
                 error.cause as NodeJS.ErrnoException;
                 if (typeof error.cause.errno === 'number' && error.cause.syscall == 'connect') {
-                    selectMenu = `<p>Cannot connect to ollama server! Is it running?</p>`
+                    selectMenu = `<p>Cannot connect to ollama server! Is it running? `
                 }
             }
         }
-        selectMenu+= `<p>Refresh the page to try again.</p>`
+        selectMenu+= `Refresh the page to try again.</p>`
     }
     const title = "Local LLM UI";
     const pageContents: string = `\
@@ -65,7 +65,7 @@ app.get('/', async (req: Request, res: Response, next: NextFunction) => {
         <link rel="stylesheet" type="text/css" href="/public/style.css">
     </head>
     <body>
-        <h1>${title}</h1>
+        <h1 style='text-align: center;'>${title}</h1>
         <div id='response-p'>
             <p>Response Will Appear here</p>
         </div>
