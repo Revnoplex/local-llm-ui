@@ -2,13 +2,27 @@ import express from 'express';
 import type { NextFunction, Request, Response } from 'express';
 import { Ollama } from "ollama";
 import { Marked } from '@ts-stack/markdown';
+import dotenv from 'dotenv';
 
-const ollamaServer = 'http://192.168.100.43:11434';
+dotenv.config({ quiet: true });
+
+const ollamaServer = process.env.OLLAMA_SERVER?.trim() || (() => {
+    const fallback = "http://127.0.0.1:11434";
+    console.error(`Warning: Missing or invalid env variable OLLAMA_SERVER!\nDefaulting to ${fallback}`);
+    return fallback;
+})();
+
+const port = process.env.PORT?.trim() && Number.isInteger(Number(process.env.PORT)) ? Number(process.env.PORT) : (() => {
+    const fallback = 80;
+    console.error(`Warning: Missing or invalid env variable PORT!\nDefaulting to port ${fallback}`);
+    return fallback;
+})();
+
+const bindAddress = process.env.BIND_ADDRESS?.trim() || "0.0.0.0";
 
 const ollama = new Ollama({ host: ollamaServer })
 
 const app = express();
-const port: number = 3000;
 
 app.disable('x-powered-by');
 
@@ -127,6 +141,6 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 })
 
 // Start the Express server
-app.listen(port, () => {
+app.listen(port, bindAddress, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });
