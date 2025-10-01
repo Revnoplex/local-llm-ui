@@ -38,20 +38,22 @@ app.get('/', async (req: Request, res: Response, next: NextFunction) => {
         const modelList = await ollama.list();
         selectMenu = '<select name="models" id="modelSelect">';
         modelList.models.forEach(model => {
-        selectMenu += `<option class='modelOption' value="${model.name}">${model.name}</option>`;
+            selectMenu += `<option class='modelOption' value="${model.name}">${model.name}</option>`;
         });
         selectMenu += '</select>'
         promptElements = '<button id="requestButton" class="btn">Generate LLM Response</button>';
     } catch (error) {
         selectMenu = `<p>Failed to list models! `
         promptElements = '<button id="requestButton" class="btn" disabled>Generate LLM Response</button>';
-        if (error instanceof Error) {
-            if (error.cause instanceof Error && 'errno' in error.cause && 'syscall' in error.cause) {
-                error.cause as NodeJS.ErrnoException;
-                if (typeof error.cause.errno === 'number' && error.cause.syscall == 'connect') {
-                    selectMenu = `<p>Cannot connect to ollama server! Is it running? `
-                }
-            }
+        if (
+            error instanceof Error && 
+            error.cause instanceof Error && 
+            'errno' in error.cause && 
+            'syscall' in error.cause && 
+            typeof error.cause.errno === 'number' && 
+            error.cause.syscall == 'connect'
+        ) {
+            selectMenu = `<p>Cannot connect to ollama server! Is it running? `
         }
         selectMenu+= `Refresh the page to try again.</p>`
     }
@@ -67,11 +69,14 @@ app.get('/', async (req: Request, res: Response, next: NextFunction) => {
     <body>
         <h1 style='text-align: center;'>${title}</h1>
         <div id='response-p'>
-            <p>Response Will Appear here</p>
+            <p>&gt;</p>
         </div>
         <div class='input-console'>
             ${selectMenu}
+            <input type="file" id="fileInput" hidden>
+            <label for="fileInput" id="fileInputLabel" hidden>Upload</label> 
             <input type="text" id="requestInput" name="Request" placeholder="Send a message">
+            <input type="checkbox" id="thinkingCheckbox" class="tkcbRelated" name="Thinking" value="enableThinking" hidden><label for="thinkingCheckbox" id="thinkingCheckboxLabel" class="tkcbRelated" hidden>Thinking</label>
             ${promptElements}
         </div>
     </body>
@@ -83,12 +88,44 @@ app.get('/', async (req: Request, res: Response, next: NextFunction) => {
         'Content-Length': Buffer.byteLength(pageContents, charset)
     });
     res.end(pageContents);
-    // res.status(200).send('<h1>Hello, World!</h1>');
+});
+
+app.get('/probe-model', async (req: Request, res: Response, next: NextFunction) => {
+    const model = req.query.model;
+    if (!model) {
+        res.status(400).send('<h1>400 Bad Request</h1><p>Model parameter is missing or blank</p>');
+        return;
+    }
+    try {
+        const modelInfo = await ollama.show({model: `${model}`});
+        let strModelInfo = JSON.stringify(modelInfo);
+        res.writeHead(200, {
+            'Content-Type': `application/json`,
+            'Content-Length': Buffer.byteLength(strModelInfo)
+        });
+        res.end(strModelInfo);
+    } catch (error) {
+        if (
+            error instanceof Error && 
+            error.name === 'ResponseError' && 
+            'status_code' in error && 
+            typeof error.status_code === 'number' && 
+            error.status_code == 404
+        ) {
+            res.status(404).send(`<h1>Model Not Found</h1><p>${error.message}</p>`)
+        } else if (error instanceof Error && error.name === 'ResponseError'){
+            res.status(502).send(`<h1>502 Bad Gateway</h1><p>The ollama server ran into an error: ${error.message}</p>`);
+        } else {
+            throw error;
+        }
+    }
+    
 });
 
 app.get('/query-llm', async (req: Request, res: Response, next: NextFunction) => {
     const input = req.query.input;
     const model = req.query.model;
+    const thinking = req.query?.thinking || 'false';
     if ((!input) || !(model)) {
         res.status(400).send('<h1>400 Bad Request</h1><p>Input parameter is missing or blank</p>');
         return;
@@ -102,16 +139,22 @@ app.get('/query-llm', async (req: Request, res: Response, next: NextFunction) =>
     const response = await ollama.chat({
         model: `${model}`,
         messages: [{ role: 'user', content: `${input}`}],
-        stream: true
+        stream: true,
+        think: thinking === 'true'
     })
     let full = '';
     let thinkingPart = '';
-    let thinking = false;
+    let legacyThinking = false;
+    let outputThinkingPart = '';
     let tmpClose = '';
     for await (const part of response) {
-        thinking = part.message.content == "<think>" || (thinking && part.message.content != "</think>")
-        if (thinking) {
+        legacyThinking = part.message.content == "<think>" || (legacyThinking && part.message.content != "</think>");
+        if (legacyThinking) {
             thinkingPart += part.message.content;
+            outputThinkingPart = "<p>"+thinkingPart.replaceAll("\n", "<br>")+"</p>";
+        } else if (part.message.thinking) {
+            thinkingPart += part.message.thinking;
+            outputThinkingPart = "<think>"+Marked.parse(thinkingPart).replaceAll("\n", "&#10;")+"</think>";
         } else {
             full+= part.message.content;
         }
@@ -124,7 +167,7 @@ app.get('/query-llm', async (req: Request, res: Response, next: NextFunction) =>
         } else if (tBTMatches & 1) {
             tmpClose = '```';
         }
-        res.write(`data: ${"<p>"+thinkingPart.replaceAll("\n", "<br>")+"</p>"+Marked.parse(full+tmpClose).replaceAll("\n", "&#10;")}\n\n`);
+        res.write(`data: ${outputThinkingPart+Marked.parse(full+tmpClose).replaceAll("\n", "&#10;")}\n\n`);
         tmpClose = '';
     }
     res.write(`data: [Done]\n\n`);

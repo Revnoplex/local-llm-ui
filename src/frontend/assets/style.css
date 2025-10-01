@@ -194,10 +194,11 @@ body {
 
 think:before {
   font-weight: bold;
+  color: rgb(191, 191, 191);
   content:"Thinking...";
 }
 
-think {
+think * {
     color: rgb(191, 191, 191);
 }
 
@@ -208,7 +209,7 @@ think {
   align-items: center;
   display: flex;
   width: 100%; 
-  gap: 10px;
+  gap: 5px;
 }
 
 #response-p{
@@ -268,5 +269,35 @@ think {
 }
 
 .modelOption {
-  background-color: rgb(20, 20, 20); /* Your desired background color for all options */
+  background-color: rgb(20, 20, 20);
+}
+
+#thinkingCheckbox {
+  accent-color: rgb(80, 80, 235);
+}
+
+#thinkingCheckbox:hover {
+  accent-color: rgb(100, 100, 255);
+}
+
+#thinkingCheckboxLabel {
+  margin-right: 5px;
+  margin-left: -5px;
+}
+
+#fileInputLabel:not([hidden]) {
+  background-color: rgba(100, 100, 255, 0.5);
+  color: white;
+  border: 2px solid rgba(100, 100, 255, 0);
+  padding: 10px 5px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  border-radius: 10px;
+}
+
+#fileInputLabel:hover,
+#fileInputLabel:active {
+  background-color: rgba(100, 100, 255, 1);
+  border: 2px solid rgba(100, 100, 255, 0.5);
 }
