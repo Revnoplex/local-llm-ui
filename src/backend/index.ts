@@ -147,16 +147,27 @@ app.get('/query-llm', async (req: Request, res: Response, next: NextFunction) =>
     let legacyThinking = false;
     let outputThinkingPart = '';
     let tmpClose = '';
+    let thinkComparison = '';
+    let checkBuffer = '';
+    let thinkingDone = false;
     for await (const part of response) {
-        legacyThinking = part.message.content == "<think>" || (legacyThinking && part.message.content != "</think>");
+        checkBuffer += part.message.content;
+        if (checkBuffer.includes("</think>")) {
+            thinkingDone = true;
+        }
+        legacyThinking = checkBuffer.startsWith("<think>") && !checkBuffer.includes("</think>");
+        thinkComparison += part.message.content.replaceAll("\n","\\n");
         if (legacyThinking) {
-            thinkingPart += part.message.content;
-            outputThinkingPart = "<p>"+thinkingPart.replaceAll("\n", "<br>")+"</p>";
+            outputThinkingPart = "<think>"+Marked.parse(checkBuffer.replace('<think>', '').replace("</think", "")).replaceAll("\n", "&#10;")+"</think>";
         } else if (part.message.thinking) {
             thinkingPart += part.message.thinking;
             outputThinkingPart = "<think>"+Marked.parse(thinkingPart).replaceAll("\n", "&#10;")+"</think>";
-        } else {
-            full+= part.message.content;
+        } else if ((!checkBuffer.startsWith('<')) || thinkingDone) {
+            if (part.message.content.startsWith(">\n")) {
+                full+= part.message.content.replace(">", "");
+            } else {
+                full+= part.message.content;
+            }
         }
 
         let rawSBTMatches = full.split("`").length - 1;
@@ -183,7 +194,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     res.status(500).send(`<head><title>500 Internal Server Error</title></head><body><h1>500 Internal Server Error</h1><p>${relativeError.message}</p></body>`)
 })
 
-// Start the Express server
+
 app.listen(port, bindAddress, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });
