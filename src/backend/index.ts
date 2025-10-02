@@ -55,7 +55,7 @@ app.get('/', async (req: Request, res: Response, next: NextFunction) => {
         ) {
             selectMenu = `<p>Cannot connect to ollama server! Is it running? `
         }
-        selectMenu+= `Refresh the page to try again.</p>`
+        selectMenu+= `Refresh the page and try again.</p>`
     }
     const title = "Local LLM UI";
     const pageContents: string = `\
