@@ -1,6 +1,7 @@
 import type { ShowResponse } from "ollama";
 var responsePContent = '<p>Hello World</p>';
 var responseP = document.getElementById('response-p');
+var attachment = '';
 
 function writeResponse(content: string, button: HTMLElement | null, input: HTMLElement | null) {
     if (responseP) {
@@ -33,10 +34,11 @@ function handleClick() {
     eventSource.onmessage = (event) => {
         const data = event.data as string;
         if (data == '[Done]') {
+            attachment = '';
             eventSource.close();
             return;
         }
-        writeResponse(promptInput+event.data, button, input)
+        writeResponse(attachment+promptInput+event.data, button, input)
     };
 
     eventSource.onerror = (error) => {
@@ -63,12 +65,12 @@ function processModelInfo(data: ShowResponse) {
             
     }
     // Multimodal support not yet implemented
-    // const fileInputLabel = document.getElementById("fileInputLabel");
-    // if (fileInputLabel && data.capabilities.includes('vision')) {
-    //     fileInputLabel.removeAttribute("hidden");
-    // } else if (fileInputLabel) {
-    //     fileInputLabel.setAttribute("hidden", '');
-    // }
+    const fileInputLabel = document.getElementById("fileInputLabel");
+    if (fileInputLabel && data.capabilities.includes('vision')) {
+        fileInputLabel.removeAttribute("hidden");
+    } else if (fileInputLabel) {
+        fileInputLabel.setAttribute("hidden", '');
+    }
 }
 
 function fetchModelInfo(model: string) {
@@ -85,11 +87,47 @@ function fetchModelInfo(model: string) {
     });
 }
 
+function registerAttachment(event: Event) {
+    const target = event.target as HTMLInputElement;
+    if (target && target.files && target.files.length > 0 && target.files[0]) {
+        const firstFile: File = target.files[0];
+        if (!(["image/jpeg", "image/png"].includes(firstFile.type))) {
+            if (responseP) {
+                responseP.innerHTML=`<p>Couldn't Attach <strong>${firstFile.name}</strong>: Not a valid image format! Only png and jpeg are supported.</p>`+(responseP?.innerHTML || "");
+            }
+            return;
+        }
+        const formData = new FormData();
+        formData.append('attachment', firstFile);
+        fetch(`/register-attachment`, {
+            method: "POST",
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP Error ${response.status}`);
+            }
+            return response.text();
+        })
+        .then((json) => {
+            attachment = "<p><strong>Attached:</strong> "+firstFile.name+"</p>";
+            if (responseP) {
+                responseP.innerHTML=attachment+(responseP?.innerHTML || "");
+            }
+        })
+        .catch(error => {
+            console.error('Failed to upload attachment:', error);
+        });
+        
+    }
+}
+
 // Add an event listener to the button once the DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     const button = document.getElementById('requestButton');
     const input = document.getElementById('requestInput');
     const select = document.getElementById('modelSelect') as HTMLScriptElement;
+    const upload = document.getElementById('fileInput');
     if (button) {
         button.addEventListener('click', handleClick);
     }
@@ -107,5 +145,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 fetchModelInfo(event.target.value);
             }
         });
+    }
+    if (upload) {
+        upload.addEventListener('change', registerAttachment)
     }
 });

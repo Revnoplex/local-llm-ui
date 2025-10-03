@@ -3,8 +3,15 @@ import type { NextFunction, Request, Response } from 'express';
 import { Ollama } from "ollama";
 import { Marked } from '@ts-stack/markdown';
 import dotenv from 'dotenv';
+import fs from 'fs';
+import multer from 'multer';
+import path from 'path';
+
+var attachmentQueue: string[] = [];
 
 dotenv.config({ quiet: true });
+
+const upload = multer({ dest: 'attachments/' })
 
 const ollamaServer = process.env.OLLAMA_SERVER?.trim() || (() => {
     const fallback = "http://127.0.0.1:11434";
@@ -136,12 +143,20 @@ app.get('/query-llm', async (req: Request, res: Response, next: NextFunction) =>
         'Connection': 'keep-alive'
     });
     res.write('data: <p id="waitMsg">Waiting for ollama server...</p>\n\n');
+    let attachments: string[] = []
+    const attachmentFilename = attachmentQueue.shift();
+    if (attachmentFilename) {
+        const imagePath = path.resolve(`attachments/${attachmentFilename}`);
+        const imageBuffer = fs.readFileSync(imagePath);
+        attachments.push(imageBuffer.toString('base64'));
+    }
     const response = await ollama.chat({
         model: `${model}`,
-        messages: [{ role: 'user', content: `${input}`}],
+        messages: [{ role: 'user', content: `${input}`, images: attachments}],
         stream: true,
-        think: thinking === 'true'
-    })
+        think: thinking === 'true',
+        
+    });
     let full = '';
     let thinkingPart = '';
     let legacyThinking = false;
@@ -181,6 +196,15 @@ app.get('/query-llm', async (req: Request, res: Response, next: NextFunction) =>
     }
     res.write(`data: [Done]\n\n`);
     res.end();
+});
+
+app.post('/register-attachment', upload.single('attachment'), async (req: Request, res: Response, next: NextFunction) => {
+    if (!req.file) {
+        res.status(400).send("Attachment is missing!");
+        return;
+    }
+    attachmentQueue.push(req.file.filename);
+    res.status(204).send("No response");
 });
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
