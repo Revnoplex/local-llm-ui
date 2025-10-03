@@ -147,7 +147,6 @@ app.get('/query-llm', async (req: Request, res: Response, next: NextFunction) =>
     let legacyThinking = false;
     let outputThinkingPart = '';
     let tmpClose = '';
-    let thinkComparison = '';
     let checkBuffer = '';
     let thinkingDone = false;
     for await (const part of response) {
@@ -156,7 +155,6 @@ app.get('/query-llm', async (req: Request, res: Response, next: NextFunction) =>
             thinkingDone = true;
         }
         legacyThinking = checkBuffer.startsWith("<think>") && !checkBuffer.includes("</think>");
-        thinkComparison += part.message.content.replaceAll("\n","\\n");
         if (legacyThinking) {
             outputThinkingPart = "<think>"+Marked.parse(checkBuffer.replace('<think>', '').replace("</think", "")).replaceAll("\n", "&#10;")+"</think>";
         } else if (part.message.thinking) {
