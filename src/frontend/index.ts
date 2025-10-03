@@ -6,7 +6,7 @@ function writeResponse(content: string, button: HTMLElement | null, input: HTMLE
     if (responseP) {
         responseP.innerHTML=content;
     }
-    if (content != "<p>Waiting for ollama server...</p>" && button && button.textContent != "Generate LLM Response") {
+    if ((!content.includes('<p id="waitMsg">')) && button && button.textContent != "Generate LLM Response") {
         button.removeAttribute('disabled');
         button.textContent = "Generate LLM Response";
         if (input) {

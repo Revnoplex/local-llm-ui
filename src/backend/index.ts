@@ -135,7 +135,7 @@ app.get('/query-llm', async (req: Request, res: Response, next: NextFunction) =>
         'Cache-Control': 'no-cache',
         'Connection': 'keep-alive'
     });
-    res.write('data: <p>Waiting for ollama server...</p>\n\n');
+    res.write('data: <p id="waitMsg">Waiting for ollama server...</p>\n\n');
     const response = await ollama.chat({
         model: `${model}`,
         messages: [{ role: 'user', content: `${input}`}],
