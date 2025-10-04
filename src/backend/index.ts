@@ -80,7 +80,7 @@ app.get('/', async (req: Request, res: Response, next: NextFunction) => {
         </div>
         <div class='input-console'>
             ${selectMenu}
-            <input type="file" id="fileInput" hidden>
+            <input type="file" id="fileInput" hidden multiple>
             <label for="fileInput" id="fileInputLabel" hidden>Upload</label> 
             <input type="text" id="requestInput" name="Request" placeholder="Send a message">
             <input type="checkbox" id="thinkingCheckbox" class="tkcbRelated" name="Thinking" value="enableThinking" hidden><label for="thinkingCheckbox" id="thinkingCheckboxLabel" class="tkcbRelated" hidden>Thinking</label>
@@ -144,66 +144,78 @@ app.get('/query-llm', async (req: Request, res: Response, next: NextFunction) =>
     });
     res.write('data: <p id="waitMsg">Waiting for ollama server...</p>\n\n');
     let attachments: string[] = []
-    const attachmentFilename = attachmentQueue.shift();
-    if (attachmentFilename) {
+    while (attachmentQueue.length > 0) {
+        const attachmentFilename = attachmentQueue.shift();
         const imagePath = path.resolve(`attachments/${attachmentFilename}`);
         const imageBuffer = fs.readFileSync(imagePath);
         attachments.push(imageBuffer.toString('base64'));
     }
-    const response = await ollama.chat({
-        model: `${model}`,
-        messages: [{ role: 'user', content: `${input}`, images: attachments}],
-        stream: true,
-        think: thinking === 'true',
-        
-    });
-    let full = '';
-    let thinkingPart = '';
-    let legacyThinking = false;
-    let outputThinkingPart = '';
-    let tmpClose = '';
-    let checkBuffer = '';
-    let thinkingDone = false;
-    for await (const part of response) {
-        checkBuffer += part.message.content;
-        if (checkBuffer.includes("</think>")) {
-            thinkingDone = true;
-        }
-        legacyThinking = checkBuffer.startsWith("<think>") && !checkBuffer.includes("</think>");
-        if (legacyThinking) {
-            outputThinkingPart = "<think>"+Marked.parse(checkBuffer.replace('<think>', '').replace("</think", "")).replaceAll("\n", "&#10;")+"</think>";
-        } else if (part.message.thinking) {
-            thinkingPart += part.message.thinking;
-            outputThinkingPart = "<think>"+Marked.parse(thinkingPart).replaceAll("\n", "&#10;")+"</think>";
-        } else if ((!checkBuffer.startsWith('<')) || thinkingDone) {
-            if (part.message.content.startsWith(">\n")) {
-                full+= part.message.content.replace(">", "");
-            } else {
-                full+= part.message.content;
+    try {
+        const response = await ollama.chat({
+            model: `${model}`,
+            messages: [{ role: 'user', content: `${input}`, images: attachments}],
+            stream: true,
+            think: thinking === 'true',
+            
+        });
+        let full = '';
+        let thinkingPart = '';
+        let legacyThinking = false;
+        let outputThinkingPart = '';
+        let tmpClose = '';
+        let checkBuffer = '';
+        let thinkingDone = false;
+        for await (const part of response) {
+            checkBuffer += part.message.content;
+            if (checkBuffer.includes("</think>")) {
+                thinkingDone = true;
             }
-        }
+            legacyThinking = checkBuffer.startsWith("<think>") && !checkBuffer.includes("</think>");
+            if (legacyThinking) {
+                outputThinkingPart = "<think>"+Marked.parse(checkBuffer.replace('<think>', '').replace("</think", "")).replaceAll("\n", "&#10;")+"</think>";
+            } else if (part.message.thinking) {
+                thinkingPart += part.message.thinking;
+                outputThinkingPart = "<think>"+Marked.parse(thinkingPart).replaceAll("\n", "&#10;")+"</think>";
+            } else if ((!checkBuffer.startsWith('<')) || thinkingDone) {
+                if (part.message.content.startsWith(">\n")) {
+                    full+= part.message.content.replace(">", "");
+                } else {
+                    full+= part.message.content;
+                }
+            }
 
-        let rawSBTMatches = full.split("`").length - 1;
-        let tBTMatches = full.split("```").length - 1;
-        let sBTMatches = rawSBTMatches - 3*tBTMatches;
-        if (sBTMatches & 1 && !(tBTMatches & 1)) {
-            tmpClose = '`';
-        } else if (tBTMatches & 1) {
-            tmpClose = '```';
+            let rawSBTMatches = full.split("`").length - 1;
+            let tBTMatches = full.split("```").length - 1;
+            let sBTMatches = rawSBTMatches - 3*tBTMatches;
+            if (sBTMatches & 1 && !(tBTMatches & 1)) {
+                tmpClose = '`';
+            } else if (tBTMatches & 1) {
+                tmpClose = '```';
+            }
+            res.write(`data: ${outputThinkingPart+Marked.parse(full+tmpClose).replaceAll("\n", "&#10;")}\n\n`);
+            tmpClose = '';
         }
-        res.write(`data: ${outputThinkingPart+Marked.parse(full+tmpClose).replaceAll("\n", "&#10;")}\n\n`);
-        tmpClose = '';
+    } catch (error) {
+        if (error instanceof Error && error.name === 'ResponseError') {
+            res.write(`data: [Error]: ${error.message}\n\n`);
+            res.end();
+            return;
+        } else {
+            throw error;
+        }
     }
     res.write(`data: [Done]\n\n`);
     res.end();
 });
 
-app.post('/register-attachment', upload.single('attachment'), async (req: Request, res: Response, next: NextFunction) => {
-    if (!req.file) {
+app.post('/register-attachment', upload.array('attachments[]'), async (req: Request, res: Response, next: NextFunction) => {
+    if (!req.files) {
         res.status(400).send("Attachment is missing!");
         return;
     }
-    attachmentQueue.push(req.file.filename);
+    for (const file of req.files as Express.Multer.File[]) {
+        attachmentQueue.push(file.filename);
+    }
     res.status(204).send("No response");
 });
 

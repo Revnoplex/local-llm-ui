@@ -38,6 +38,12 @@ function handleClick() {
             eventSource.close();
             return;
         }
+        if (data.startsWith('[Error]:')) {
+            writeResponse(attachment+promptInput+"<p>"+event.data.replace("[Error]: ", "<strong>Couldn't Generate Response: </strong>")+"</p>", button, input);
+            attachment = '';
+            eventSource.close();
+            return;
+        }
         writeResponse(attachment+promptInput+event.data, button, input)
     };
 
@@ -47,7 +53,7 @@ function handleClick() {
         const target = error.target as EventSource;
         EventSource.CONNECTING
         if (target.readyState === EventSource.CONNECTING) {
-            errorMsg = "<p>Lost Connection To Backend!</p>"
+            errorMsg = "<p>Lost Connection To Backend Or The Backend Encountered An Error!</p>"
         }
         writeResponse((responseP?.innerHTML || "")+errorMsg, button, input);
         eventSource.close();
@@ -90,15 +96,18 @@ function fetchModelInfo(model: string) {
 function registerAttachment(event: Event) {
     const target = event.target as HTMLInputElement;
     if (target && target.files && target.files.length > 0 && target.files[0]) {
-        const firstFile: File = target.files[0];
-        if (!(["image/jpeg", "image/png"].includes(firstFile.type))) {
-            if (responseP) {
-                responseP.innerHTML=`<p>Couldn't Attach <strong>${firstFile.name}</strong>: Not a valid image format! Only png and jpeg are supported.</p>`+(responseP?.innerHTML || "");
-            }
-            return;
-        }
         const formData = new FormData();
-        formData.append('attachment', firstFile);
+        let successfulAttachments: string[] = [];
+        for (const firstFile of target.files) {
+            if (!(["image/jpeg", "image/png"].includes(firstFile.type))) {
+                if (responseP) {
+                    responseP.innerHTML=`<p>Couldn't Attach <strong>${firstFile.name}</strong>: Not a valid image format! Only png and jpeg are supported.</p>`+(responseP?.innerHTML || "");
+                }
+                continue;
+            }
+            formData.append('attachments[]', firstFile, firstFile.name);
+            successfulAttachments.push(firstFile.name);
+        }
         fetch(`/register-attachment`, {
             method: "POST",
             body: formData
@@ -110,9 +119,12 @@ function registerAttachment(event: Event) {
             return response.text();
         })
         .then((json) => {
-            attachment = "<p><strong>Attached:</strong> "+firstFile.name+"</p>";
-            if (responseP) {
-                responseP.innerHTML=attachment+(responseP?.innerHTML || "");
+            for (const filename of successfulAttachments) {
+                const tmpAttachment = "<p><strong>Attached:</strong> "+filename+"</p>";
+                attachment += tmpAttachment;
+                if (responseP) {
+                    responseP.innerHTML=tmpAttachment+(responseP?.innerHTML || "");
+                }
             }
         })
         .catch(error => {
