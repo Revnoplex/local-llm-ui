@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const button = document.getElementById('requestButton');
     const input = document.getElementById('requestInput');
     const select = document.getElementById('modelSelect') as HTMLScriptElement;
-    const upload = document.getElementById('fileInput');
+    const upload = document.getElementById('fileInput') as HTMLInputElement;
     if (button) {
         button.addEventListener('click', handleClick);
     }
@@ -159,6 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     if (upload) {
-        upload.addEventListener('change', registerAttachment)
+        upload.addEventListener('change', registerAttachment);
+        upload.addEventListener('click', (_: Event) => {upload.value = "";});
     }
 });
