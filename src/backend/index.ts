@@ -1,11 +1,17 @@
 import express from 'express';
 import type { NextFunction, Request, Response } from 'express';
-import { Ollama } from "ollama";
+import { Ollama, type Message } from "ollama";
 import { Marked } from '@ts-stack/markdown';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import multer from 'multer';
 import path from 'path';
+
+interface ContextBank {
+    [key: string]: Message[];
+}
+
+var contextBank: ContextBank = {};
 
 var attachmentQueue: string[] = [];
 
@@ -38,6 +44,9 @@ app.use('/index.js', express.static('dist/frontend/index.js'));
 app.use('/public', express.static('src/frontend/assets/'));
 
 app.get('/', async (req: Request, res: Response, next: NextFunction) => {
+    if (typeof req.socket.remoteAddress === "string" && !(req.socket.remoteAddress in contextBank)) {
+        contextBank[req.socket.remoteAddress] = [];
+    }
     let selectMenu = '';
     let promptElements = '';
 
@@ -151,12 +160,19 @@ app.get('/query-llm', async (req: Request, res: Response, next: NextFunction) =>
         attachments.push(imageBuffer.toString('base64'));
     }
     try {
+        const message: Message = {
+            role: 'user', 
+            content: `${input}`, 
+            images: attachments
+        };
+        const instanceId = req.socket?.remoteAddress ?? "__error__";
+        contextBank[instanceId] ??= [];
+        contextBank[instanceId].push(message);
         const response = await ollama.chat({
             model: `${model}`,
-            messages: [{ role: 'user', content: `${input}`, images: attachments}],
+            messages: contextBank[instanceId],
             stream: true,
             think: thinking === 'true',
-            
         });
         let full = '';
         let thinkingPart = '';
@@ -195,6 +211,7 @@ app.get('/query-llm', async (req: Request, res: Response, next: NextFunction) =>
             res.write(`data: ${outputThinkingPart+Marked.parse(full+tmpClose).replaceAll("\n", "&#10;")}\n\n`);
             tmpClose = '';
         }
+        contextBank[instanceId].push({'role': 'assistant', 'content': checkBuffer, 'thinking': thinkingPart});
     } catch (error) {
         if (error instanceof Error && error.name === 'ResponseError') {
             res.write(`data: [Error]: ${error.message}\n\n`);
