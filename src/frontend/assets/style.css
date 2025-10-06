@@ -130,10 +130,11 @@ body {
 
   .btn, .btn:link,
   .btn:visited {
+    font-size: 14px;
     background-color: rgba(100, 100, 255, 0.5);
     color: white;
     border: 2px solid rgba(100, 100, 255, 0);
-    padding: 15px 25px;
+    padding: 12px 15px;
     text-align: center;
     text-decoration: none;
     display: inline-block;
@@ -147,10 +148,11 @@ body {
   }
 
   .btn:disabled {
+    font-size: 14px;
     background-color: rgba(100, 100, 100, 0.5);
     color: white;
     border: 2px solid rgba(0, 100, 255, 0);
-    padding: 15px 25px;
+    padding: 12px 15px;
     text-align: center;
     text-decoration: none;
     display: inline-block;
@@ -288,8 +290,9 @@ think * {
 #fileInputLabel:not([hidden]) {
   background-color: rgba(100, 100, 255, 0.5);
   color: white;
+  font-size: 14px;
   border: 2px solid rgba(100, 100, 255, 0);
-  padding: 10px 5px;
+  padding: 12px 15px;
   text-align: center;
   text-decoration: none;
   display: inline-block;
