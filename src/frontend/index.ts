@@ -7,9 +7,9 @@ function writeResponse(content: string, button: HTMLElement | null, input: HTMLE
     if (responseP) {
         responseP.innerHTML=content;
     }
-    if ((!content.includes('<p id="waitMsg">')) && button && button.textContent != "Generate LLM Response") {
+    if ((!content.includes('<p id="waitMsg">')) && button && button.textContent != "Generate Response") {
         button.removeAttribute('disabled');
-        button.textContent = "Generate LLM Response";
+        button.textContent = "Generate Response";
         if (input) {
             input.removeAttribute('disabled');
         }

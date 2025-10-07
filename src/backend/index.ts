@@ -57,10 +57,10 @@ app.get('/', async (req: Request, res: Response, next: NextFunction) => {
             selectMenu += `<option class='modelOption' value="${model.name}">${model.name}</option>`;
         });
         selectMenu += '</select>'
-        promptElements = '<button id="requestButton" class="btn">Generate LLM Response</button>';
+        promptElements = '<button id="requestButton" class="btn">Generate Response</button>';
     } catch (error) {
         selectMenu = `<p>Failed to list models! `
-        promptElements = '<button id="requestButton" class="btn" disabled>Generate LLM Response</button>';
+        promptElements = '<button id="requestButton" class="btn" disabled>Generate Response</button>';
         if (
             error instanceof Error && 
             error.cause instanceof Error && 
