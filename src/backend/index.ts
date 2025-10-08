@@ -158,6 +158,7 @@ app.get('/query-llm', async (req: Request, res: Response, next: NextFunction) =>
         const imagePath = path.resolve(`attachments/${attachmentFilename}`);
         const imageBuffer = fs.readFileSync(imagePath);
         attachments.push(imageBuffer.toString('base64'));
+        fs.unlink(imagePath, (err) => {console.error(`Couldn't delete attachment ${attachmentFilename}: ${err?.message ?? err}`)});
     }
     try {
         const message: Message = {
