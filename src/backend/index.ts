@@ -249,7 +249,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 
 app.listen(port, bindAddress, () => {
     if (bindAddress == "0.0.0.0") {
-        console.log(`Server is running on http://127.0.0.1:${port}`)
+        console.log(`Server is running on http://127.0.0.1:${port}`);
     } else {
         console.log(`Server is running on http://127.0.0.1:${port} listening to ${bindAddress}`);
     }
