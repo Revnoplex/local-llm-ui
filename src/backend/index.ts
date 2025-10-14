@@ -17,7 +17,7 @@ var attachmentQueue: string[] = [];
 
 dotenv.config({ quiet: true });
 
-const upload = multer({ dest: 'attachments/' })
+const upload = multer({ dest: 'attachments/' });
 
 const ollamaServer = process.env.OLLAMA_SERVER?.trim() || (() => {
     const fallback = "http://127.0.0.1:11434";
