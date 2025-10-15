@@ -243,8 +243,8 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     if (err.cause instanceof Error) {
         relativeError = err.cause
     }
-    res.status(500).send(`<head><title>500 Internal Server Error</title></head><body><h1>500 Internal Server Error</h1><p>${relativeError.message}</p></body>`)
-})
+    res.status(500).send(`<head><title>500 Internal Server Error</title></head><body><h1>500 Internal Server Error</h1><p>${relativeError.message}</p></body>`);
+});
 
 
 app.listen(port, bindAddress, () => {
