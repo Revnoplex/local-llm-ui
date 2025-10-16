@@ -33,7 +33,7 @@ const port = process.env.PORT?.trim() && Number.isInteger(Number(process.env.POR
 
 const bindAddress = process.env.BIND_ADDRESS?.trim() || "0.0.0.0";
 
-const ollama = new Ollama({ host: ollamaServer })
+const ollama = new Ollama({ host: ollamaServer });
 
 const app = express();
 
