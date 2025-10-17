@@ -21,13 +21,17 @@ const upload = multer({ dest: 'attachments/' });
 
 const ollamaServer = process.env.OLLAMA_SERVER?.trim() || (() => {
     const fallback = "http://127.0.0.1:11434";
-    console.error(`Warning: Missing or invalid env variable OLLAMA_SERVER!\nDefaulting to ${fallback}`);
+    console.error(
+        `Warning: Missing or invalid env variable OLLAMA_SERVER!\nDefaulting to ${fallback}`
+    );
     return fallback;
 })();
 
 const port = process.env.PORT?.trim() && Number.isInteger(Number(process.env.PORT)) ? Number(process.env.PORT) : (() => {
     const fallback = 80;
-    console.error(`Warning: Missing or invalid env variable PORT!\nDefaulting to port ${fallback}`);
+    console.error(
+        `Warning: Missing or invalid env variable PORT!\nDefaulting to port ${fallback}`
+    );
     return fallback;
 })();
 
@@ -56,7 +60,7 @@ app.get('/', async (req: Request, res: Response, next: NextFunction) => {
         modelList.models.forEach(model => {
             selectMenu += `<option class='modelOption' value="${model.name}">${model.name}</option>`;
         });
-        selectMenu += '</select>'
+        selectMenu += '</select>';
         promptElements = '<button id="requestButton" class="btn">Generate Response</button>';
     } catch (error) {
         selectMenu = `<p>Failed to list models! `
@@ -92,7 +96,8 @@ app.get('/', async (req: Request, res: Response, next: NextFunction) => {
             <input type="file" id="fileInput" hidden multiple>
             <label for="fileInput" id="fileInputLabel" hidden>Upload</label> 
             <input type="text" id="requestInput" name="Request" placeholder="Send a message">
-            <input type="checkbox" id="thinkingCheckbox" class="tkcbRelated" name="Thinking" value="enableThinking" hidden><label for="thinkingCheckbox" id="thinkingCheckboxLabel" class="tkcbRelated" hidden>Thinking</label>
+            <input type="checkbox" id="thinkingCheckbox" class="tkcbRelated" name="Thinking" value="enableThinking" hidden>
+            <label for="thinkingCheckbox" id="thinkingCheckboxLabel" class="tkcbRelated" hidden>Thinking</label>
             ${promptElements}
         </div>
     </body>
@@ -130,7 +135,9 @@ app.get('/probe-model', async (req: Request, res: Response, next: NextFunction) 
         ) {
             res.status(404).send(`<h1>Model Not Found</h1><p>${error.message}</p>`)
         } else if (error instanceof Error && error.name === 'ResponseError'){
-            res.status(502).send(`<h1>502 Bad Gateway</h1><p>The ollama server ran into an error: ${error.message}</p>`);
+            res.status(502).send(
+                `<h1>502 Bad Gateway</h1><p>The ollama server ran into an error: ${error.message}</p>`
+            );
         } else {
             throw error;
         }
@@ -158,7 +165,11 @@ app.get('/query-llm', async (req: Request, res: Response, next: NextFunction) =>
         const imagePath = path.resolve(`attachments/${attachmentFilename}`);
         const imageBuffer = fs.readFileSync(imagePath);
         attachments.push(imageBuffer.toString('base64'));
-        fs.unlink(imagePath, (err) => {console.error(`Couldn't delete attachment ${attachmentFilename}: ${err?.message ?? err}`)});
+        fs.unlink(imagePath, (err) => {
+            console.error(
+                `Couldn't delete attachment ${attachmentFilename}: ${err?.message ?? err}`
+            );
+        });
     }
     try {
         const message: Message = {
@@ -243,7 +254,16 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     if (err.cause instanceof Error) {
         relativeError = err.cause
     }
-    res.status(500).send(`<head><title>500 Internal Server Error</title></head><body><h1>500 Internal Server Error</h1><p>${relativeError.message}</p></body>`);
+    res.status(500).send(`\
+<head>
+    <title>500 Internal Server Error</title>
+</head>
+<body>
+    <h1>500 Internal Server Error</h1>
+    <p>${relativeError.message}</p>
+</body>\
+`
+    );
 });
 
 
