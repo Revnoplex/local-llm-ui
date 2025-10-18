@@ -159,7 +159,7 @@ app.get('/query-llm', async (req: Request, res: Response, next: NextFunction) =>
         'Connection': 'keep-alive'
     });
     res.write('data: <p id="waitMsg">Waiting for ollama server...</p>\n\n');
-    let attachments: string[] = []
+    let attachments: string[] = [];
     while (attachmentQueue.length > 0) {
         const attachmentFilename = attachmentQueue.shift();
         const imagePath = path.resolve(`attachments/${attachmentFilename}`);
