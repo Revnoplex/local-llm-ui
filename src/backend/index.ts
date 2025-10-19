@@ -133,7 +133,7 @@ app.get('/probe-model', async (req: Request, res: Response, next: NextFunction) 
             typeof error.status_code === 'number' && 
             error.status_code == 404
         ) {
-            res.status(404).send(`<h1>Model Not Found</h1><p>${error.message}</p>`)
+            res.status(404).send(`<h1>Model Not Found</h1><p>${error.message}</p>`);
         } else if (error instanceof Error && error.name === 'ResponseError'){
             res.status(502).send(
                 `<h1>502 Bad Gateway</h1><p>The ollama server ran into an error: ${error.message}</p>`
