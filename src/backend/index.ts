@@ -52,8 +52,14 @@ app.get('/', async (req: Request, res: Response, next: NextFunction) => {
         contextBank[req.socket.remoteAddress] = [];
     }
     let selectMenu = '';
-    let promptElements = '';
-
+    let inputConsoleContent = `\
+<input type="file" id="fileInput" hidden multiple>
+<label for="fileInput" id="fileInputLabel" hidden>Upload</label> 
+`;
+    let inputConsoleSuffix = `\
+<input type="checkbox" id="thinkingCheckbox" class="tkcbRelated" name="Thinking" value="enableThinking" hidden>
+<label for="thinkingCheckbox" id="thinkingCheckboxLabel" class="tkcbRelated" hidden>Thinking</label>\
+`;
     try {
         const modelList = await ollama.list();
         selectMenu = '<select name="models" id="modelSelect">';
@@ -61,10 +67,11 @@ app.get('/', async (req: Request, res: Response, next: NextFunction) => {
             selectMenu += `<option class='modelOption' value="${model.name}">${model.name}</option>`;
         });
         selectMenu += '</select>';
-        promptElements = '<button id="requestButton" class="btn">Generate Response</button>';
+        let textInput = `<input type="text" id="requestInput" name="Request" placeholder="Send a message">`;
+        inputConsoleContent = selectMenu + '\n' + inputConsoleContent + textInput + inputConsoleSuffix + '<button id="requestButton" class="btn">Generate Response</button>';
     } catch (error) {
-        selectMenu = `<p>Failed to list models! `
-        promptElements = '<button id="requestButton" class="btn" disabled>Generate Response</button>';
+        let errorMessage = `Failed to list models!`
+        selectMenu = '<select name="models" id="modelSelect" disabled>';
         if (
             error instanceof Error && 
             error.cause instanceof Error && 
@@ -73,9 +80,12 @@ app.get('/', async (req: Request, res: Response, next: NextFunction) => {
             typeof error.cause.errno === 'number' && 
             error.cause.syscall == 'connect'
         ) {
-            selectMenu = `<p>Cannot connect to ollama server! Is it running? `
+            // errorMessage = `Connection Error`;
         }
-        selectMenu+= `Refresh the page and try again.</p>`
+        selectMenu += `<option class='modelOption' value="">${errorMessage}</option>`;
+        selectMenu += '</select>';
+        let textInput = `<input type="text" id="requestInput" name="Request" placeholder="" disabled>`;
+        inputConsoleContent = selectMenu + '\n' + inputConsoleContent + textInput + inputConsoleSuffix + '<button id="requestButton" class="btn" disabled>Generate Response</button>';
     }
     const title = "Local LLM UI";
     const pageContents: string = `\
@@ -92,13 +102,7 @@ app.get('/', async (req: Request, res: Response, next: NextFunction) => {
             <p>&gt;</p>
         </div>
         <div class='input-console'>
-            ${selectMenu}
-            <input type="file" id="fileInput" hidden multiple>
-            <label for="fileInput" id="fileInputLabel" hidden>Upload</label> 
-            <input type="text" id="requestInput" name="Request" placeholder="Send a message">
-            <input type="checkbox" id="thinkingCheckbox" class="tkcbRelated" name="Thinking" value="enableThinking" hidden>
-            <label for="thinkingCheckbox" id="thinkingCheckboxLabel" class="tkcbRelated" hidden>Thinking</label>
-            ${promptElements}
+            ${inputConsoleContent}
         </div>
     </body>
 </html>\
