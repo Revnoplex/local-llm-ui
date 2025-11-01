@@ -1,4 +1,4 @@
-import type { ShowResponse } from "ollama";
+import type { ShowResponse, ModelResponse } from "ollama";
 var responsePContent = '<p>Hello World</p>';
 var responseP = document.getElementById('response-p');
 var attachment = '';
@@ -134,12 +134,47 @@ function registerAttachment(event: Event) {
     }
 }
 
+
+function populateSelect(element: HTMLSelectElement, retryElement: HTMLButtonElement) {
+    fetch(`/list-models`)
+    .then(response => {
+    if (!response.ok) {
+        throw new Error(`HTTP Error ${response.status}`);
+    }
+    return response.json();
+    })
+    .then((json) => {
+        element.options.length = 0;
+        let placeholderOption = new Option("Select a model", undefined, undefined, true);
+        placeholderOption.className = 'modelOption';
+        placeholderOption.disabled = true;
+        element.add(placeholderOption);
+        json.forEach((model: ModelResponse) => {
+            let option = new Option(model.name, model.name);
+            option.className = 'modelOption';
+            element.add(option);
+        });
+        element.disabled = false;
+        retryElement.hidden = true;
+    })
+    .catch(error => {
+        console.error('Unable to list models:', error);
+        element.options.length = 0;
+        let option = new Option("Failed to list models!");
+        option.className = 'modelOption';
+        element.add(option);
+        retryElement.hidden = false;
+    });
+}
+
 // Add an event listener to the button once the DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    const button = document.getElementById('requestButton');
-    const input = document.getElementById('requestInput');
-    const select = document.getElementById('modelSelect') as HTMLScriptElement;
+    const button = document.getElementById('requestButton') as HTMLButtonElement;
+    const input = document.getElementById('requestInput') as HTMLInputElement;
+    const select = document.getElementById('modelSelect') as HTMLSelectElement;
     const upload = document.getElementById('fileInput') as HTMLInputElement;
+    const listModelsRetryButton = document.getElementById('listModelsRetryButton') as HTMLButtonElement;
+    populateSelect(select, listModelsRetryButton);
     if (button) {
         button.addEventListener('click', handleClick);
     }
@@ -151,9 +186,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     if (select && 'value' in select && typeof select.value === 'string') {
-        fetchModelInfo(select.value);
+        if (select.value != '') {
+            input.placeholder = "Send a message";
+            input.disabled = false;
+            button.disabled = false;
+            fetchModelInfo(select.value);
+        }
         select.addEventListener('change', (event) => {
-            if (event.target !== null && 'value' in event.target && typeof event.target.value === 'string') {
+            if (event.target !== null && 'value' in event.target && typeof event.target.value === 'string' && event.target.value != '') {
+                input.placeholder = "Send a message";
+                input.disabled = false;
+                button.disabled = false;
                 fetchModelInfo(event.target.value);
             }
         });
@@ -161,5 +204,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (upload) {
         upload.addEventListener('change', registerAttachment);
         upload.addEventListener('click', (_: Event) => {upload.value = "";});
+    }
+
+    if (listModelsRetryButton) {
+        listModelsRetryButton.addEventListener('click', (_: Event) => {
+            select.options.length = 0;
+            let option = new Option("Fetching Models...");
+            option.className = 'modelOption';
+            select.add(option);
+            populateSelect(select, listModelsRetryButton);
+        });
     }
 });

@@ -51,42 +51,6 @@ app.get('/', async (req: Request, res: Response, next: NextFunction) => {
     if (typeof req.socket.remoteAddress === "string" && !(req.socket.remoteAddress in contextBank)) {
         contextBank[req.socket.remoteAddress] = [];
     }
-    let selectMenu = '';
-    let inputConsoleContent = `\
-<input type="file" id="fileInput" hidden multiple>
-<label for="fileInput" id="fileInputLabel" hidden>Upload</label> 
-`;
-    let inputConsoleSuffix = `\
-<input type="checkbox" id="thinkingCheckbox" class="tkcbRelated" name="Thinking" value="enableThinking" hidden>
-<label for="thinkingCheckbox" id="thinkingCheckboxLabel" class="tkcbRelated" hidden>Thinking</label>\
-`;
-    try {
-        const modelList = await ollama.list();
-        selectMenu = '<select name="models" id="modelSelect">';
-        modelList.models.forEach(model => {
-            selectMenu += `<option class='modelOption' value="${model.name}">${model.name}</option>`;
-        });
-        selectMenu += '</select>';
-        let textInput = `<input type="text" id="requestInput" name="Request" placeholder="Send a message">`;
-        inputConsoleContent = selectMenu + '\n' + inputConsoleContent + textInput + inputConsoleSuffix + '<button id="requestButton" class="btn">Generate Response</button>';
-    } catch (error) {
-        let errorMessage = `Failed to list models!`
-        selectMenu = '<select name="models" id="modelSelect" disabled>';
-        if (
-            error instanceof Error && 
-            error.cause instanceof Error && 
-            'errno' in error.cause && 
-            'syscall' in error.cause && 
-            typeof error.cause.errno === 'number' && 
-            error.cause.syscall == 'connect'
-        ) {
-            // errorMessage = `Connection Error`;
-        }
-        selectMenu += `<option class='modelOption' value="">${errorMessage}</option>`;
-        selectMenu += '</select>';
-        let textInput = `<input type="text" id="requestInput" name="Request" placeholder="" disabled>`;
-        inputConsoleContent = selectMenu + '\n' + inputConsoleContent + textInput + inputConsoleSuffix + '<button id="requestButton" class="btn" disabled>Generate Response</button>';
-    }
     const title = "Local LLM UI";
     const pageContents: string = `\
 <!DOCTYPE html>
@@ -102,7 +66,16 @@ app.get('/', async (req: Request, res: Response, next: NextFunction) => {
             <p>&gt;</p>
         </div>
         <div class='input-console'>
-            ${inputConsoleContent}
+            <select name="models" id="modelSelect" disabled>
+                <option class='modelOption' value="">Fetching Models...</option>
+            </select>
+            <button id="listModelsRetryButton" class="btn" hidden>Retry</button>
+            <input type="file" id="fileInput" hidden multiple>
+            <label for="fileInput" id="fileInputLabel" hidden>Upload</label> 
+            <input type="text" id="requestInput" name="Request" placeholder="Please select a model first" disabled>
+            <input type="checkbox" id="thinkingCheckbox" class="tkcbRelated" name="Thinking" value="enableThinking" hidden>
+            <label for="thinkingCheckbox" id="thinkingCheckboxLabel" class="tkcbRelated" hidden>Thinking</label>
+            <button id="requestButton" class="btn" disabled>Generate Response</button>
         </div>
     </body>
 </html>\
@@ -145,6 +118,30 @@ app.get('/probe-model', async (req: Request, res: Response, next: NextFunction) 
         } else {
             throw error;
         }
+    }
+    
+});
+
+app.get('/list-models', async (req: Request, res: Response, next: NextFunction) => {
+    let modelList = null;
+    let errorAck = false;
+    try {
+        modelList = await ollama.list();
+    } catch (error) {
+        errorAck = true;
+        res.status(502).send(
+            `<h1>502 Bad Gateway</h1><p>The ollama server ran into an error: ${error instanceof Error? error.cause ?? error.message: "Unknown Error"}</p>`
+        );
+    }
+    if (modelList !== null) {
+        let strModelList = JSON.stringify(modelList.models);
+        res.writeHead(200, {
+            'Content-Type': `application/json`,
+            'Content-Length': Buffer.byteLength(strModelList)
+        });
+        res.end(strModelList);
+    } else if (!errorAck) {
+        throw Error("Unexpected situation in list-models endpoint")
     }
     
 });

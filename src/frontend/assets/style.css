@@ -128,7 +128,7 @@ body {
   }
 
 
-  .btn, .btn:link,
+  .btn:not([hidden]), .btn:link,
   .btn:visited {
     font-size: 14px;
     background-color: rgba(100, 100, 255, 0.5);
