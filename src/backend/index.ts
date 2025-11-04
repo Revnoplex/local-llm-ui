@@ -61,7 +61,11 @@ app.get('/', async (req: Request, res: Response, next: NextFunction) => {
         <link rel="stylesheet" type="text/css" href="/public/style.css">
     </head>
     <body>
-        <h1 style='text-align: center;'>${title}</h1>
+        <div class="status-bar">
+            <p id="modelStatus" class="status-bar-element">Model Status Will Appear here</p>
+            <h1 style='text-align: center;'>${title}</h1>
+            <p id="ollamaStatus" class="status-bar-element" style="text-align: right">Ollama on ${ollamaServer}</p>
+        </div>
         <div id='response-p'>
             <p>&gt;</p>
         </div>
@@ -145,6 +149,31 @@ app.get('/list-models', async (req: Request, res: Response, next: NextFunction) 
     }
     
 });
+
+app.get('/list-running-models', async (req: Request, res: Response, next: NextFunction) => {
+    let modelList = null;
+    let errorAck = false;
+    try {
+        modelList = await ollama.ps();
+    } catch (error) {
+        errorAck = true;
+        res.status(502).send(
+            `<h1>502 Bad Gateway</h1><p>The ollama server ran into an error: ${error instanceof Error? error.cause ?? error.message: "Unknown Error"}</p>`
+        );
+    }
+    if (modelList !== null) {
+        let strModelList = JSON.stringify(modelList.models);
+        res.writeHead(200, {
+            'Content-Type': `application/json`,
+            'Content-Length': Buffer.byteLength(strModelList)
+        });
+        res.end(strModelList);
+    } else if (!errorAck) {
+        throw Error("Unexpected situation in list-models endpoint")
+    }
+    
+});
+
 
 app.get('/query-llm', async (req: Request, res: Response, next: NextFunction) => {
     const input = req.query.input;

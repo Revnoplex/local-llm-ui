@@ -2,12 +2,50 @@ import type { ShowResponse, ModelResponse } from "ollama";
 var responsePContent = '<p>Hello World</p>';
 var responseP = document.getElementById('response-p');
 var attachment = '';
+var checkStatus = false;
+var statusCheckTimeout: number = 0;
 
-function writeResponse(content: string, button: HTMLElement | null, input: HTMLElement | null) {
+function setModelStatus(modelName: string, assumeStarted: boolean = false) {
+    if (statusCheckTimeout) {
+        clearTimeout(statusCheckTimeout);
+        statusCheckTimeout = 0;
+    }
+    const modelStatus = document.getElementById("modelStatus") as HTMLParagraphElement;
+    modelStatus.textContent = assumeStarted? `${modelName}: Starting`: `${modelName}: Offline`;
+    fetch(`/list-running-models`)
+    .then(response => {
+    if (!response.ok) {
+        throw new Error(`HTTP Error ${response.status}`);
+    }
+    return response.json();
+    })
+    .then((json: ModelResponse[]) => {
+        json.forEach((model: ModelResponse) => {
+            if (modelName == model.name) {
+                modelStatus.textContent = `${modelName}: Running`;
+                if (typeof model.expires_at === "string") {
+                    statusCheckTimeout = window.setTimeout(() => {setModelStatus(modelName);}, new Date(model.expires_at).getTime()-Date.now());
+                } else if (model.expires_at instanceof Date) {
+                    statusCheckTimeout = window.setTimeout(() => {setModelStatus(modelName);}, model.expires_at.getTime()-Date.now());
+                }
+            }
+        });
+    })
+    .catch(error => {
+        console.error('Unable to list running models:', error);
+        modelStatus.textContent = `Error`;
+    });
+}
+
+function writeResponse(content: string, button: HTMLElement | null, input: HTMLElement | null, modelName: string) {
     if (responseP) {
         responseP.innerHTML=content;
     }
     if ((!content.includes('<p id="waitMsg">')) && button && button.textContent != "Generate Response") {
+        if (checkStatus) {
+            setModelStatus(modelName, true);
+            checkStatus = false;
+        }
         button.removeAttribute('disabled');
         button.textContent = "Generate Response";
         if (input) {
@@ -28,9 +66,11 @@ function handleClick() {
     if (input) {
         input.setAttribute('disabled', '');
     }
+    setModelStatus(select.value, true);
     const eventSource = new EventSource(`/query-llm?input=${input.value}&model=${select.value}&thinking=${thinkingCheckbox.checked && !thinkingCheckbox.hidden}`);
     let promptInput = `<p>&gt; ${input.value}</p>`;
     input.value = '';
+    checkStatus = true;
     eventSource.onmessage = (event) => {
         const data = event.data as string;
         if (data == '[Done]') {
@@ -39,12 +79,12 @@ function handleClick() {
             return;
         }
         if (data.startsWith('[Error]:')) {
-            writeResponse(attachment+promptInput+"<p>"+event.data.replace("[Error]: ", "<strong>Couldn't Generate Response: </strong>")+"</p>", button, input);
+            writeResponse(attachment+promptInput+"<p>"+event.data.replace("[Error]: ", "<strong>Couldn't Generate Response: </strong>")+"</p>", button, input, select.value);
             attachment = '';
             eventSource.close();
             return;
         }
-        writeResponse(attachment+promptInput+event.data, button, input)
+        writeResponse(attachment+promptInput+event.data, button, input, select.value)
     };
 
     eventSource.onerror = (error) => {
@@ -55,12 +95,12 @@ function handleClick() {
         if (target.readyState === EventSource.CONNECTING) {
             errorMsg = "<p>Lost Connection To Backend Or The Backend Encountered An Error!</p>"
         }
-        writeResponse((responseP?.innerHTML || "")+errorMsg, button, input);
+        writeResponse((responseP?.innerHTML || "")+errorMsg, button, input, select.value);
         eventSource.close();
     };
 }
 
-function processModelInfo(data: ShowResponse) {
+function processModelInfo(data: ShowResponse, modelName: string) {
     const supportsThinnking = data.capabilities.includes('thinking');
     for (const element of document.querySelectorAll(".tkcbRelated")) {
         if (supportsThinnking) {
@@ -70,13 +110,14 @@ function processModelInfo(data: ShowResponse) {
         }
             
     }
-    // Multimodal support not yet implemented
+    
     const fileInputLabel = document.getElementById("fileInputLabel");
     if (fileInputLabel && data.capabilities.includes('vision')) {
         fileInputLabel.removeAttribute("hidden");
     } else if (fileInputLabel) {
         fileInputLabel.setAttribute("hidden", '');
     }
+    setModelStatus(modelName);
 }
 
 function fetchModelInfo(model: string) {
@@ -87,7 +128,7 @@ function fetchModelInfo(model: string) {
     }
     return response.json();
     })
-    .then((json) => processModelInfo(json as ShowResponse))
+    .then((json) => processModelInfo(json as ShowResponse, model))
     .catch(error => {
         console.error('Unable to fetch model info:', error);
     });
