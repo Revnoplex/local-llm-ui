@@ -1,11 +1,40 @@
 import type { ShowResponse, ModelResponse } from "ollama";
+import type { ServerStatus } from "../backend/index.js";
 var responsePContent = '<p>Hello World</p>';
 var responseP = document.getElementById('response-p');
 var attachment = '';
 var checkStatus = false;
 var statusCheckTimeout: number = 0;
 
+function checkOllamaStatus() {
+    const ollamaStatus = document.getElementById('ollamaStatus') as HTMLParagraphElement;
+    if (ollamaStatus) {
+        fetch(`/get-version`)
+        .then(response => {
+            if (!response.ok) {
+                if (response.status == 502) {
+                    ollamaStatus.textContent = "Ollama server offline"
+                    throw new Error("[status502]");
+                }
+                throw new Error(`HTTP Error ${response.status}`);
+            }
+            return response.json();
+        })
+        .then((json: ServerStatus) => {
+            ollamaStatus.textContent = `Ollama ${json.version} on ${json.hostname} port ${json.port}`
+        })
+        .catch(error => {
+            console.error('Unable to get ollama server status:', error);
+            if (!(error instanceof Error && error.message == '[status502]')) {
+                ollamaStatus.textContent = "Error getting ollama server status"
+            }
+           
+        });
+    }
+}
+
 function setModelStatus(modelName: string, assumeStarted: boolean = false) {
+    checkOllamaStatus();
     if (statusCheckTimeout) {
         clearTimeout(statusCheckTimeout);
         statusCheckTimeout = 0;
@@ -135,6 +164,7 @@ function fetchModelInfo(model: string) {
 }
 
 function registerAttachment(event: Event) {
+    checkOllamaStatus();
     const target = event.target as HTMLInputElement;
     if (target && target.files && target.files.length > 0 && target.files[0]) {
         const formData = new FormData();
@@ -177,6 +207,7 @@ function registerAttachment(event: Event) {
 
 
 function populateSelect(element: HTMLSelectElement, retryElement: HTMLButtonElement) {
+    checkOllamaStatus();
     fetch(`/list-models`)
     .then(response => {
     if (!response.ok) {

@@ -6,6 +6,17 @@ import dotenv from 'dotenv';
 import fs from 'fs';
 import multer from 'multer';
 import path from 'path';
+import http from 'http';
+
+interface VersionResponse {
+    version: string
+}
+
+export interface ServerStatus {
+    version: string,
+    hostname: string
+    port: string
+}
 
 interface ContextBank {
     [key: string]: Message[];
@@ -64,7 +75,7 @@ app.get('/', async (req: Request, res: Response, next: NextFunction) => {
         <div class="status-bar">
             <p id="modelStatus" class="status-bar-element">Model Status Will Appear here</p>
             <h1 style='text-align: center;'>${title}</h1>
-            <p id="ollamaStatus" class="status-bar-element" style="text-align: right">Ollama on ${ollamaServer}</p>
+            <p id="ollamaStatus" class="status-bar-element" style="text-align: right"></p>
         </div>
         <div id='response-p'>
             <p>&gt;</p>
@@ -174,6 +185,44 @@ app.get('/list-running-models', async (req: Request, res: Response, next: NextFu
     
 });
 
+app.get('/get-version', async (req: Request, res: Response, next: NextFunction) => {
+    const parsedOllamaServer = new URL(ollamaServer);
+    const request = http.request({
+        hostname: parsedOllamaServer.hostname,
+        port: parsedOllamaServer.port,
+        path: '/api/version',
+        method: 'GET'
+    }, (response) => {
+        let data = '';
+
+        response.on('data', (chunk) => {
+            data += chunk;
+        });
+
+        response.on('end', () => {
+            const parsedData: VersionResponse = JSON.parse(data);
+            const serverStatus: ServerStatus = {
+                "version": parsedData.version,
+                "hostname": parsedOllamaServer.hostname,
+                "port": parsedOllamaServer.port
+            }
+            let serverStatusString = JSON.stringify(serverStatus);
+            res.writeHead(200, {
+                'Content-Type': `application/json`,
+                'Content-Length': Buffer.byteLength(serverStatusString)
+            });
+            res.write(serverStatusString);
+        });
+    });
+
+    request.on('error', (error) => {
+        res.status(502).send(
+            `<h1>502 Bad Gateway</h1><p>The ollama server ran into an error: ${error instanceof Error? error.cause ?? error.message: "Unknown Error"}</p>`
+        );
+    });
+
+    request.end();
+});
 
 app.get('/query-llm', async (req: Request, res: Response, next: NextFunction) => {
     const input = req.query.input;
