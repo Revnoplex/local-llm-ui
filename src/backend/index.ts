@@ -212,6 +212,7 @@ app.get('/get-version', async (req: Request, res: Response, next: NextFunction) 
                 'Content-Length': Buffer.byteLength(serverStatusString)
             });
             res.write(serverStatusString);
+            res.end();
         });
     });
 
