@@ -186,43 +186,33 @@ app.get('/list-running-models', async (req: Request, res: Response, next: NextFu
 });
 
 app.get('/get-version', async (req: Request, res: Response, next: NextFunction) => {
+    let versionRes = null;
+    let errorAck = false;
     const parsedOllamaServer = new URL(ollamaServer);
-    const request = http.request({
-        hostname: parsedOllamaServer.hostname,
-        port: parsedOllamaServer.port,
-        path: '/api/version',
-        method: 'GET'
-    }, (response) => {
-        let data = '';
-
-        response.on('data', (chunk) => {
-            data += chunk;
-        });
-
-        response.on('end', () => {
-            const parsedData: VersionResponse = JSON.parse(data);
-            const serverStatus: ServerStatus = {
-                "version": parsedData.version,
-                "hostname": parsedOllamaServer.hostname,
-                "port": parsedOllamaServer.port
-            }
-            let serverStatusString = JSON.stringify(serverStatus);
-            res.writeHead(200, {
-                'Content-Type': `application/json`,
-                'Content-Length': Buffer.byteLength(serverStatusString)
-            });
-            res.write(serverStatusString);
-            res.end();
-        });
-    });
-
-    request.on('error', (error) => {
+    try {
+        versionRes = await ollama.version();
+    } catch (error) {
+        errorAck = true;
         res.status(502).send(
             `<h1>502 Bad Gateway</h1><p>The ollama server ran into an error: ${error instanceof Error? error.cause ?? error.message: "Unknown Error"}</p>`
         );
-    });
-
-    request.end();
+    }
+    if (versionRes !== null) {
+        const serverStatus: ServerStatus = {
+                "version": versionRes.version,
+                "hostname": parsedOllamaServer.hostname,
+                "port": parsedOllamaServer.port
+            }
+        let serverStatusString = JSON.stringify(serverStatus);
+        res.writeHead(200, {
+            'Content-Type': `application/json`,
+            'Content-Length': Buffer.byteLength(serverStatusString)
+        });
+        res.write(serverStatusString);
+        res.end();
+    } else if (!errorAck) {
+        throw Error("Unexpected situation in get-version endpoint")
+    }
 });
 
 app.get('/query-llm', async (req: Request, res: Response, next: NextFunction) => {
