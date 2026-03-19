@@ -21,7 +21,7 @@ Build:
 npm run build
 ```
 
-And then run:
+Run with:
 ```sh
 npm run start
 ```
