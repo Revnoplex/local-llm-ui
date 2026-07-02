@@ -45,6 +45,10 @@ body {
     text-align: center;
   }
 
+  table {
+    color: rgb(255, 255,255);
+  }
+
   p, label, ul, li {
     color: rgb(255, 255, 255);
   }
