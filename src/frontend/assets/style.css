@@ -1,10 +1,31 @@
+
+:root {
+  color-scheme: light dark;
+  --global-bg: light-dark(#fff,#141414);
+  --global-contrast: light-dark(#000, #fff);
+  --global-text: var(--global-contrast);
+  --global-border: var(--global-contrast);
+  --g: 
+  
+}
+
+
+[data-theme="light"] {
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+}
+
 body {
-    background-color: rgb(20, 20, 20);
+    background-color: var(--global-bg); 
     font-family: sans-serif;
     margin-top: 0px;
     display:flex; 
     flex-direction:column; 
     height:98vh;
+    transition: background-color 0.3s, color 0.3s;
   }
 
   /* pre {
@@ -15,7 +36,7 @@ body {
   .add-bot-style {
     font-family: sans-serif;
     text-align: center;
-    color: rgb(255, 255, 255);
+    color: var(--global-text);
   }
 
   .add-bot-style > ul {
@@ -29,38 +50,33 @@ body {
   }
 
   h1 {
-    color: rgb(255, 255, 255);
+    color: var(--global-text);
   }
 
   h2 {
-    color: rgb(255, 255, 255);
+    color: var(--global-text);
   }
 
   h3 {
-    color: rgb(255, 255, 255);
+    color: var(--global-text);
   }
 
   h4 {
-    color: #ffffff;
+    color: var(--global-text);
     text-align: center;
   }
 
   table {
-    color: rgb(255, 255,255);
+    color: var(--global-text);
   }
 
   p, label, ul, li {
-    color: rgb(255, 255, 255);
+    color: var(--global-text);
   }
 
   hr {
-    color: rgb(255, 255, 255);
+    color: var(--global-text);
     border: solid;
-  }
-
-  .logo {
-    color: white !important;
-    text-decoration: none !important;
   }
 
   .main-title {
@@ -70,18 +86,18 @@ body {
     padding-right: 10px;
     position: fixed;
     width: 100%;
-    background-color: rgb(20, 20, 20);
+    background-color: var(--global-bg);
     margin-block-start: 0em;
     margin-block-end: 0em;
   }
 
   noscript {
-    color: rgb(255, 255, 255);
+    color: var(--global-text);
     text-align: center;
   }
 
   .main-title-text {
-    color: #fff;
+    color: var(--global-text);
     text-decoration: none;
   }
 
@@ -111,24 +127,6 @@ body {
     text-decoration: none;
     display: inline-block;
     border-radius: 10px !important;
-  }
-
-  .webringBtn:link,
-  .webringBtn:visited {
-    background-color: rgba(100, 100, 255, 0.5);
-    color: white;
-    border: 2px solid rgba(100, 100, 255, 0);
-    padding: 10px 10px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    border-radius: 10px;
-  }
-
-  .webringBtn:hover,
-  .webringBtn:active {
-    background-color: rgba(100, 100, 255, 1);
-    border: 2px solid rgba(100, 100, 255, 0.5);
   }
 
 
@@ -235,7 +233,7 @@ think * {
 
 #response-p{
   border-radius: 25px;
-  border: 2px solid hsl(0, 0%, 100%);
+  border: 2px solid var(--global-border);
   padding: 20px; 
   width: 100%; 
   margin-left: auto;
@@ -252,7 +250,7 @@ think * {
 #requestInput {
   color: white;
   background-color: transparent;
-  border: 2px solid hsl(0, 0%, 100%);
+  border: 2px solid var(--global-border);
   padding: 10px;
   /* text-align: center; */
   font-size: 1em;
@@ -266,7 +264,7 @@ think * {
 #requestInput:disabled {
   color: rgba(255,255,255,0.5);
   background-color: transparent;
-  border: 2px solid hsl(0, 0%, 100%);
+  border: 2px solid var(--global-border);
   padding: 10px;
   /* text-align: center; */
   font-size: 1em;
@@ -278,9 +276,9 @@ think * {
 }
 
 #modelSelect {
-  color: white;
+  color: var(--global-text);
   background-color: transparent;
-  border: 2px solid hsl(0, 0%, 100%);
+  border: 2px solid var(--global-border);
   padding: 10px;
   /* text-align: center; */
   font-size: 1em;
@@ -290,7 +288,24 @@ think * {
 }
 
 .modelOption {
-  background-color: rgb(20, 20, 20);
+  background-color: var(--global-bg);
+
+}
+
+#themeSelect {
+  color: var(--global-text);
+  background-color: transparent;
+  border: 2px solid var(--global-border);
+  padding: 5px;
+  /* text-align: center; */
+  font-size: 1em;
+  text-decoration: none;
+  display: inline-block;
+  border-radius: 10px;
+}
+
+.themeOption {
+  background-color: var(--global-bg);
 
 }
 

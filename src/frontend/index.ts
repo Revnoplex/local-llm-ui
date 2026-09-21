@@ -245,6 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const input = document.getElementById('requestInput') as HTMLInputElement;
     const select = document.getElementById('modelSelect') as HTMLSelectElement;
     const upload = document.getElementById('fileInput') as HTMLInputElement;
+    const themeSelect = document.getElementById('themeSelect') as HTMLSelectElement;
     const listModelsRetryButton = document.getElementById('listModelsRetryButton') as HTMLButtonElement;
     populateSelect(select, listModelsRetryButton);
     if (button) {
@@ -270,6 +271,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 input.disabled = false;
                 button.disabled = false;
                 fetchModelInfo(event.target.value);
+            }
+        });
+    }
+    if (themeSelect) {
+        themeSelect.addEventListener('change', (event) => {
+            const html = document.documentElement;
+            if (event.target !== null && 'value' in event.target && typeof event.target.value === 'string' && event.target.value != '') {
+                if (event.target.value === 'auto') {
+                    html.removeAttribute('data-theme');
+                } else {
+                    html.setAttribute('data-theme', event.target.value);
+                }
             }
         });
     }

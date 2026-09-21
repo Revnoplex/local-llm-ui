@@ -9,7 +9,14 @@
         <div class="status-bar">
             <p id="modelStatus" class="status-bar-element">Model Status Will Appear here</p>
             <h1 style='text-align: center;'>{title}</h1>
-            <p id="ollamaStatus" class="status-bar-element" style="text-align: right"></p>
+            <p id="ollamaStatus" class="status-bar-element" style="text-align: right">Connecting to ollama server....</p>
+            &emsp;
+            <label for="themeSelect">Theme:&nbsp;</label>
+            <select name="themes" id="themeSelect">
+                <option class='themeOption' value="auto">Auto</option>
+                <option class='themeOption' value="dark">Dark</option>
+                <option class='themeOption' value="light">Light</option>
+            </select>
         </div>
         <div id='response-p'>
             <p>&gt;</p>
