@@ -38,7 +38,7 @@ const ollamaServer = process.env.OLLAMA_SERVER?.trim() || (() => {
 })();
 
 const port = process.env.PORT?.trim() && Number.isInteger(Number(process.env.PORT)) ? Number(process.env.PORT) : (() => {
-    const fallback = 80;
+    const fallback = 8080;
     console.error(
         `Warning: Missing or invalid env variable PORT!\nDefaulting to port ${fallback}`
     );
