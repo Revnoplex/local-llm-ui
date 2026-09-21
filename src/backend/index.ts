@@ -62,38 +62,19 @@ app.get('/', async (req: Request, res: Response, next: NextFunction) => {
         contextBank[req.socket.remoteAddress] = [];
     }
     const title = "Local LLM UI";
-    const pageContents: string = `\
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <title>${title}</title>
-        <script type="module" src="/index.js" defer></script>
-        <link rel="stylesheet" type="text/css" href="/public/style.css">
-    </head>
-    <body>
-        <div class="status-bar">
-            <p id="modelStatus" class="status-bar-element">Model Status Will Appear here</p>
-            <h1 style='text-align: center;'>${title}</h1>
-            <p id="ollamaStatus" class="status-bar-element" style="text-align: right"></p>
-        </div>
-        <div id='response-p'>
-            <p>&gt;</p>
-        </div>
-        <div class='input-console'>
-            <select name="models" id="modelSelect" disabled>
-                <option class='modelOption' value="">Fetching Models...</option>
-            </select>
-            <button id="listModelsRetryButton" class="btn" hidden>Retry</button>
-            <input type="file" id="fileInput" hidden multiple>
-            <label for="fileInput" id="fileInputLabel" hidden>Upload</label> 
-            <input type="text" id="requestInput" name="Request" placeholder="Please select a model first" disabled>
-            <input type="checkbox" id="thinkingCheckbox" class="tkcbRelated" name="Thinking" value="enableThinking" hidden>
-            <label for="thinkingCheckbox" id="thinkingCheckboxLabel" class="tkcbRelated" hidden>Thinking</label>
-            <button id="requestButton" class="btn" disabled>Generate Response</button>
-        </div>
-    </body>
-</html>\
-    `;
+    let pageContents: string;
+    try {
+        pageContents = fs.readFileSync('src/frontend/index.html', 'utf8');
+    } catch (error) {
+        if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+            res.status(404).send(`<h1>File Not Found</h1><p>${error.message}</p>`);
+        } else {
+            throw error;
+        }
+        return
+    }
+    pageContents = pageContents.replaceAll("{title}", title);
+
     const charset: BufferEncoding = 'utf-8'
     res.writeHead(200, {
         'Content-Type': `text/html; charset=${charset}`,
