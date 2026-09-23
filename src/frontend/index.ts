@@ -1,6 +1,5 @@
 import type { ShowResponse, ModelResponse } from "ollama";
 import type { ServerStatus } from "../backend/index.js";
-var responsePContent = '<p>Hello World</p>';
 var responseP = document.getElementById('response-p');
 var attachment = '';
 var checkStatus = false;
@@ -87,7 +86,7 @@ function handleClick() {
     const button = document.getElementById('requestButton');
     if (button) {
         button.setAttribute('disabled', '');
-        button.textContent = "Fetching llm-response...";
+        button.textContent = "Fetching Response...";
     }
     const select = document.getElementById('modelSelect') as HTMLSelectElement;
     const input = document.getElementById('requestInput') as HTMLInputElement;
