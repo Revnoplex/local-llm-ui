@@ -5,6 +5,22 @@
   --global-contrast: light-dark(#000, #fff);
   --global-text: var(--global-contrast);
   --global-border: var(--global-contrast);
+  --global-code-bg: light-dark(#d1d1d1, #0e0e0e);
+  --global-primary: rgb(100, 100, 255);
+  --global-secondary: rgb(
+    from var(--global-primary)
+    calc(r * 0.5 + 10)
+    calc(g * 0.5 + 10)
+    calc(b * 0.5 + 10)
+  );
+  --global-alt: rgb(
+    from var(--global-primary)
+    calc(r * 0.8)
+    calc(g * 0.8)
+    calc(b * 0.8 + 31)
+  );
+  --global-btn-bg: light-dark(var(--global-primary), var(--global-secondary));
+  --global-btn-hv: light-dark(var(--global-secondary), var(--global-primary));
 }
 
 
@@ -19,186 +35,97 @@
 [data-theme="oled-dark"] {
   color-scheme: dark;
   --global-bg: #000;
-  --global-contrast: #fff;
 }
 
 body {
-    background-color: var(--global-bg); 
-    font-family: sans-serif;
-    margin-top: 0px;
-    display:flex; 
-    flex-direction:column; 
-    height:98vh;
-    transition: background-color 0.3s, color 0.3s;
-  }
+  background-color: var(--global-bg);
+  font-family: sans-serif;
+  margin-top: 0px;
+  display: flex;
+  flex-direction: column;
+  height: 98vh;
+  transition: background-color 0.3s, color 0.3s, border 0.3s, code 0.3s;
+}
 
-  /* pre {
-    font-family: sans-serif;
-    text-align: center;
-  } */
+h1 {
+  color: var(--global-text);
+}
 
-  .add-bot-style {
-    font-family: sans-serif;
-    text-align: center;
-    color: var(--global-text);
-  }
+h2 {
+  color: var(--global-text);
+}
 
-  .add-bot-style > ul {
-    display: inline-block;
-    text-align: left;
-  }
+h3 {
+  color: var(--global-text);
+}
 
-  .add-bot-style > ol {
-    display: inline-block;
-    text-align: left;
-  }
+h4 {
+  color: var(--global-text);
+  text-align: center;
+}
 
-  h1 {
-    color: var(--global-text);
-  }
+table {
+  color: var(--global-text);
+}
 
-  h2 {
-    color: var(--global-text);
-  }
+p, label, ul, li {
+  color: var(--global-text);
+}
 
-  h3 {
-    color: var(--global-text);
-  }
+hr {
+  color: var(--global-text);
+  border: solid;
+}
 
-  h4 {
-    color: var(--global-text);
-    text-align: center;
-  }
+noscript {
+  color: var(--global-text);
+  text-align: center;
+}
 
-  table {
-    color: var(--global-text);
-  }
+.btn:not([hidden]), .btn:link,
+.btn:visited {
+  font-size: 14px;
+  background-color: var(--global-btn-bg);
+  color: white;
+  border: 2px solid rgba(0,0,0,0);
+  padding: 12px 15px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  border-radius: 10px;
+}
 
-  p, label, ul, li {
-    color: var(--global-text);
-  }
+.btn:hover:not(:disabled),
+.btn:active:not(:disabled) {
+  background-color: var(--global-btn-hv);
+  border: 2px solid rgba(0,0,0,0);
+}
 
-  hr {
-    color: var(--global-text);
-    border: solid;
-  }
-
-  .main-title {
-    padding-top: 1em;
-    padding-bottom: 5px;
-    padding-left: 10px;
-    padding-right: 10px;
-    position: fixed;
-    width: 100%;
-    background-color: var(--global-bg);
-    margin-block-start: 0em;
-    margin-block-end: 0em;
-  }
-
-  noscript {
-    color: var(--global-text);
-    text-align: center;
-  }
-
-  .main-title-text {
-    color: var(--global-text);
-    text-decoration: none;
-  }
-
-  .t-logos {
-    width: 32px;
-    height: 32px;
-  }
-
-  .t-links:link,
-  .t-links:visited {
-    background-color: rgba(0, 0, 0, 0) !important;
-    color: white;
-    border: 2px solid rgba(100, 100, 255, 0) !important;
-    padding: 5px 10px !important;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    border-radius: 0px !important;
-  }
-
-  .t-links:hover,
-  .t-links:active {
-    background-color: rgb(100, 100, 255, 0.5) !important;
-    border: 2px solid rgb(255, 255, 255) !important;
-    padding: 5px 10px !important;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    border-radius: 10px !important;
-  }
-
-
-  .btn:not([hidden]), .btn:link,
-  .btn:visited {
-    font-size: 14px;
-    background-color: rgba(100, 100, 255, 0.5);
-    color: white;
-    border: 2px solid rgba(100, 100, 255, 0);
-    padding: 12px 15px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    border-radius: 10px;
-  }
-
-  .btn:hover:not(:disabled),
-  .btn:active:not(:disabled) {
-    background-color: rgba(100, 100, 255, 1);
-    border: 2px solid rgba(100, 100, 255, 0.5);
-  }
-
-  .btn:disabled {
-    font-size: 14px;
-    background-color: rgba(100, 100, 100, 0.5);
-    color: white;
-    border: 2px solid rgba(0, 100, 255, 0);
-    padding: 12px 15px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    border-radius: 10px;
-  }
+.btn:disabled {
+  font-size: 14px;
+  background-color: rgba(100, 100, 100, 0.5);
+  color: white;
+  border: 2px solid rgba(0,0,0,0);
+  padding: 12px 15px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  border-radius: 10px;
+}
   
-  .f-link:link,
-  .f-link:visited {
-    color: rgb(73, 73, 184) !important;
-    background-color: rgba(0, 100, 255, 0.0) !important;
-    padding: 0 !important;
-    border: rgba(0, 0, 0, 0.0);
-    text-decoration: none;
-  }
+img {
+  vertical-align: middle;
+}
 
-  img {
-    vertical-align: middle;
-  }
-
-  .title-links {
-    font-size: 15px;
-  }
-
-  .featured-items {
-    display: flex;
-  }
-
-  .featured-item {
-    flex: 1; /* additionally, equal width */
-    display: inline-block;
-    padding: 1em;
-  }
-
-  code {
-    font-family: Consolas,"courier new";
-    color: rgb(100, 100, 255);
-    background-color: #0e0e0e;
-    padding: 2px;
-    font-size: 95%;
-  }
+code {
+  display: inline-block;
+  font-family: Consolas,"courier new";
+  color: var(--global-primary);
+  background-color: var(--global-code-bg);
+  padding: 3px;
+  border-radius: 5px;
+  font-size: 95%;
+}
 
 think:before {
   font-weight: bold;
@@ -252,7 +179,7 @@ think * {
 }
 
 #requestInput {
-  color: white;
+  color: var(--global-text);
   background-color: transparent;
   border: 2px solid var(--global-border);
   padding: 10px;
@@ -318,7 +245,7 @@ think * {
 }
 
 #thinkingCheckbox:hover {
-  accent-color: rgb(100, 100, 255);
+  accent-color: var(--global-primary);
 }
 
 #thinkingCheckboxLabel {
@@ -327,10 +254,10 @@ think * {
 }
 
 #fileInputLabel:not([hidden]) {
-  background-color: rgba(100, 100, 255, 0.5);
+  background-color: var(--global-btn-bg);
   color: white;
   font-size: 14px;
-  border: 2px solid rgba(100, 100, 255, 0);
+  border: 2px solid rgba(0,0,0,0);
   padding: 12px 15px;
   text-align: center;
   text-decoration: none;
@@ -340,6 +267,6 @@ think * {
 
 #fileInputLabel:hover,
 #fileInputLabel:active {
-  background-color: rgba(100, 100, 255, 1);
-  border: 2px solid rgba(100, 100, 255, 0.5);
+  background-color: var(--global-btn-hv);
+  border: 2px solid rgba(0,0,0,0);
 }
