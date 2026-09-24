@@ -1,5 +1,5 @@
 import type { ShowResponse, ModelResponse } from "ollama";
-import type { ServerStatus } from "../backend/index.js";
+import type { ServerStatus } from "../index.ts";
 var responseP = document.getElementById('response-p');
 var attachment = '';
 var checkStatus = false;

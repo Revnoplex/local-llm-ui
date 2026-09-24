@@ -53,9 +53,9 @@ const app = express();
 
 app.disable('x-powered-by');
 
-app.use('/index.js', express.static('dist/frontend/index.js'));
+app.use([/\.map$|\.d\.ts$/, '/js'], express.static('dist/client'));
 
-app.use('/public', express.static('src/frontend/assets/'));
+app.use(express.static('public'));
 
 app.get('/', async (req: Request, res: Response, next: NextFunction) => {
     if (typeof req.socket.remoteAddress === "string" && !(req.socket.remoteAddress in contextBank)) {
@@ -64,7 +64,7 @@ app.get('/', async (req: Request, res: Response, next: NextFunction) => {
     const title = "Local LLM UI";
     let pageContents: string;
     try {
-        pageContents = fs.readFileSync('src/frontend/index.html', 'utf8');
+        pageContents = fs.readFileSync('src/views/index.html', 'utf8');
     } catch (error) {
         if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
             res.status(404).send(`<h1>File Not Found</h1><p>${error.message}</p>`);
