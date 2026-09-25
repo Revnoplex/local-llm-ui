@@ -53,6 +53,47 @@ const app = express();
 
 app.disable('x-powered-by');
 
+const HTTP_CODES = {
+    200: "OK",
+    204: "No Content",
+    400: "Bad Request",
+    401: "Unauthorized",
+    404: "Not Found",
+    500: "Internal Server Error",
+    502: "Bad Gateway",
+    503: "Service Unavailable",
+} as const;
+
+
+type HTTPCode = keyof typeof HTTP_CODES;
+
+function validateHTTPCode(status: number): status is HTTPCode {
+    return status in HTTP_CODES;
+}
+
+function displayStatus(status: number | null = null, title: string | null = null, description: string | null = null, themed: boolean = true) {
+    let page = "<!DOCTYPE html>\n<html lang=\"en\">\n    <head>\n";
+    if (themed) {
+        page += "        <link rel=\"stylesheet\" type=\"text/css\" href=\"/css/main.css\">\n";
+    }
+    if (typeof title === "string" && title != '') {
+        page += `        <title>${title}</title>\n    </head>\n    <body>\n        <h1>${title}</h1>\n`;
+    }
+    if (typeof description === "string" && description != '' && title === null && typeof status === "number" && validateHTTPCode(status)) {
+        page += `        <title>${HTTP_CODES[status]}</title>\n    </head>\n    <body>\n        <h1>${status} ${HTTP_CODES[status]}</h1>\n        <p>${description}</p>\n`;
+    } else if (typeof description === "string" && description != '' && title === null) {
+        page += `        <title>${description}</title>\n    </head>\n    <body>\n        <p>${description}</p>\n`;
+    } else if (typeof description === "string" && description != '') {
+        page += `        <p>${description}</p>\n`;
+    } else if (typeof status === "number" && validateHTTPCode(status) && title === null) {
+        page += `        <title>${HTTP_CODES[status]}</title>\n    </head>\n    <body>\n        <h1>${status} ${HTTP_CODES[status]}</h1>\n`;
+    } else if (title === null) {
+        page += `        <title>Error</title>\n    </head>\n    <body>\n        <p>Unknown Error</p>\n`;
+    }
+    page+= "    </body>\n</html>\n";
+    return page;
+}
+
 app.use([/\.map$|\.d\.ts$/, '/js'], express.static('dist/client'));
 
 app.use(express.static('public'));
@@ -67,7 +108,7 @@ app.get('/', async (req: Request, res: Response, next: NextFunction) => {
         pageContents = fs.readFileSync('src/views/index.html', 'utf8');
     } catch (error) {
         if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
-            res.status(404).send(`<h1>File Not Found</h1><p>${error.message}</p>`);
+            res.status(404).send(displayStatus(404, null, error.message));
         } else {
             throw error;
         }
@@ -86,7 +127,7 @@ app.get('/', async (req: Request, res: Response, next: NextFunction) => {
 app.get('/probe-model', async (req: Request, res: Response, next: NextFunction) => {
     const model = req.query.model;
     if (!model) {
-        res.status(400).send('<h1>400 Bad Request</h1><p>Model parameter is missing or blank</p>');
+        res.status(400).send(displayStatus(400, null, "Model parameter is missing or blank"));
         return;
     }
     try {
@@ -105,12 +146,13 @@ app.get('/probe-model', async (req: Request, res: Response, next: NextFunction) 
             typeof error.status_code === 'number' && 
             error.status_code == 404
         ) {
-            res.status(404).send(`<h1>Model Not Found</h1><p>${error.message}</p>`);
-        } else if (error instanceof Error && error.name === 'ResponseError'){
-            res.status(502).send(
-                `<h1>502 Bad Gateway</h1><p>The ollama server ran into an error: ${error.message}</p>`
-            );
+            res.status(404).send(displayStatus(404, "Model Not Found", error.message));
+        } else if (error instanceof Error && (error.name === 'ResponseError' || error.cause)){
+            res.status(502).send(displayStatus(502, null, `The ollama server ran into an error: ${error instanceof Error? error.cause ?? error.message: "Unknown Error"}`));
         } else {
+            if (error instanceof Error) {
+                console.log(error.message);
+            }
             throw error;
         }
     }
@@ -124,9 +166,10 @@ app.get('/list-models', async (req: Request, res: Response, next: NextFunction) 
         modelList = await ollama.list();
     } catch (error) {
         errorAck = true;
-        res.status(502).send(
-            `<h1>502 Bad Gateway</h1><p>The ollama server ran into an error: ${error instanceof Error? error.cause ?? error.message: "Unknown Error"}</p>`
-        );
+        res.status(502).send(displayStatus(
+            502, null, 
+            `The ollama server ran into an error: ${error instanceof Error? error.cause ?? error.message: "Unknown Error"}`
+        ));
     }
     if (modelList !== null) {
         let strModelList = JSON.stringify(modelList.models);
@@ -148,9 +191,10 @@ app.get('/list-running-models', async (req: Request, res: Response, next: NextFu
         modelList = await ollama.ps();
     } catch (error) {
         errorAck = true;
-        res.status(502).send(
-            `<h1>502 Bad Gateway</h1><p>The ollama server ran into an error: ${error instanceof Error? error.cause ?? error.message: "Unknown Error"}</p>`
-        );
+        res.status(502).send(displayStatus(
+            502, null, 
+            `The ollama server ran into an error: ${error instanceof Error? error.cause ?? error.message: "Unknown Error"}`
+        ));
     }
     if (modelList !== null) {
         let strModelList = JSON.stringify(modelList.models);
@@ -173,9 +217,10 @@ app.get('/get-version', async (req: Request, res: Response, next: NextFunction) 
         versionRes = await ollama.version();
     } catch (error) {
         errorAck = true;
-        res.status(502).send(
-            `<h1>502 Bad Gateway</h1><p>The ollama server ran into an error: ${error instanceof Error? error.cause ?? error.message: "Unknown Error"}</p>`
-        );
+        res.status(502).send(displayStatus(
+            502, null, 
+            `The ollama server ran into an error: ${error instanceof Error? error.cause ?? error.message: "Unknown Error"}`
+        ));
     }
     if (versionRes !== null) {
         const serverStatus: ServerStatus = {
@@ -200,7 +245,7 @@ app.get('/query-llm', async (req: Request, res: Response, next: NextFunction) =>
     const model = req.query.model;
     const thinking = req.query?.thinking || 'false';
     if ((!input) || !(model)) {
-        res.status(400).send('<h1>400 Bad Request</h1><p>Input parameter is missing or blank</p>');
+        res.status(400).send(displayStatus(400, null, "Input parameter is missing or blank"));
         return;
     }
     res.writeHead(200, {
@@ -275,8 +320,8 @@ app.get('/query-llm', async (req: Request, res: Response, next: NextFunction) =>
         }
         contextBank[instanceId].push({'role': 'assistant', 'content': checkBuffer, 'thinking': thinkingPart});
     } catch (error) {
-        if (error instanceof Error && error.name === 'ResponseError') {
-            res.write(`data: [Error]: ${error.message}\n\n`);
+        if (error instanceof Error && (error.name === 'ResponseError' || error.cause)) {
+            res.write(`data: [Error]: ${error instanceof Error ? error.cause ?? error.message : "Unknown Error"}\n\n`);
             res.end();
             return;
         } else {
@@ -295,25 +340,21 @@ app.post('/register-attachment', upload.array('attachments[]'), async (req: Requ
     for (const file of req.files as Express.Multer.File[]) {
         attachmentQueue.push(file.filename);
     }
-    res.status(204).send("No Content");
+    res.status(204).send(displayStatus(204));
 });
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-    console.error(err.stack);
     let relativeError = err;
     if (err.cause instanceof Error) {
         relativeError = err.cause
     }
-    res.status(500).send(`\
-<head>
-    <title>500 Internal Server Error</title>
-</head>
-<body>
-    <h1>500 Internal Server Error</h1>
-    <p>${relativeError.message}</p>
-</body>\
-`
-    );
+    console.error(relativeError.stack);
+    if (res.headersSent) {
+        res.write(`data: [Error]: Internal Server Error: ${relativeError.message}\n\n`);
+        res.end();
+        return;
+    }
+    res.status(500).send(displayStatus(500, null, relativeError.message));
 });
 
 
