@@ -295,7 +295,7 @@ app.post('/register-attachment', upload.array('attachments[]'), async (req: Requ
     for (const file of req.files as Express.Multer.File[]) {
         attachmentQueue.push(file.filename);
     }
-    res.status(204).send("No response");
+    res.status(204).send("No Content");
 });
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
