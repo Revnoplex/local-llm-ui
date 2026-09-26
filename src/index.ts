@@ -343,6 +343,10 @@ app.post('/register-attachment', upload.array('attachments[]'), async (req: Requ
     res.status(204).send(displayStatus(204));
 });
 
+app.use((req: Request, res: Response, next: NextFunction) => {
+    res.status(404).send(displayStatus(404, null, `Cannot ${req.method} ${req.path}`));
+});
+
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     let relativeError = err;
     if (err.cause instanceof Error) {
