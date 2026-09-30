@@ -4,6 +4,8 @@ var responseP = document.getElementById('response-p');
 var attachment = '';
 var checkStatus = false;
 var statusCheckTimeout: number = 0;
+const responseAnchor = document.createElement('div');
+responseAnchor.className = 'response-anchor';
 
 function checkOllamaStatus() {
     const ollamaStatus = document.getElementById('ollamaStatus') as HTMLParagraphElement;
@@ -68,6 +70,7 @@ function setModelStatus(modelName: string, assumeStarted: boolean = false) {
 function writeResponse(content: string, button: HTMLElement | null, input: HTMLElement | null, modelName: string) {
     if (responseP) {
         responseP.innerHTML=content;
+        responseP.scrollTop = responseP.scrollHeight;
     }
     if ((!content.includes('<p id="waitMsg">')) && button && button.textContent != "Generate Response") {
         if (checkStatus) {
