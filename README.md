@@ -1,6 +1,6 @@
 # Local LLM UI
 
-Personal project for ollama web ui.
+A web interface for ollama models.
 
 This project is still a work in progress and the code is currently just a proof of concept.
 
