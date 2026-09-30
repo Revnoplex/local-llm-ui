@@ -69,8 +69,11 @@ function setModelStatus(modelName: string, assumeStarted: boolean = false) {
 
 function writeResponse(content: string, button: HTMLElement | null, input: HTMLElement | null, modelName: string) {
     if (responseP) {
+        const isAtBottom = responseP.scrollHeight - responseP.scrollTop - responseP.clientHeight < 5;
         responseP.innerHTML=content;
-        responseP.scrollTop = responseP.scrollHeight;
+        if (isAtBottom) {
+            responseP.scrollTop = responseP.scrollHeight;
+        }
     }
     if ((!content.includes('<p id="waitMsg">')) && button && button.textContent != "Generate Response") {
         if (checkStatus) {
