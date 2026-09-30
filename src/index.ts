@@ -1,7 +1,7 @@
 import express from 'express';
 import type { NextFunction, Request, Response } from 'express';
 import { Ollama, type Message } from "ollama";
-import { Marked } from '@ts-stack/markdown';
+import { marked } from 'marked';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import multer from 'multer';
@@ -295,10 +295,10 @@ app.get('/query-llm', async (req: Request, res: Response, next: NextFunction) =>
             }
             legacyThinking = checkBuffer.startsWith("<think>") && !checkBuffer.includes("</think>");
             if (legacyThinking) {
-                outputThinkingPart = "<think>"+Marked.parse(checkBuffer.replace('<think>', '').replace("</think", "")).replaceAll("\n", "&#10;")+"</think>";
+                outputThinkingPart = "<think>"+marked.parse(checkBuffer.replace('<think>', '').replace("</think", ""), { async: false }).replaceAll("\n", "&#10;")+"</think>";
             } else if (part.message.thinking) {
                 thinkingPart += part.message.thinking;
-                outputThinkingPart = "<think>"+Marked.parse(thinkingPart).replaceAll("\n", "&#10;")+"</think>";
+                outputThinkingPart = "<think>"+marked.parse(thinkingPart, { async: false }).replaceAll("\n", "&#10;")+"</think>";
             } else if ((!checkBuffer.startsWith('<')) || thinkingDone) {
                 if (part.message.content.startsWith(">\n")) {
                     full+= part.message.content.replace(">", "");
@@ -315,7 +315,7 @@ app.get('/query-llm', async (req: Request, res: Response, next: NextFunction) =>
             } else if (tBTMatches & 1) {
                 tmpClose = '```';
             }
-            res.write(`data: ${outputThinkingPart+Marked.parse(full+tmpClose).replaceAll("\n", "&#10;")}\n\n`);
+            res.write(`data: ${outputThinkingPart+marked.parse(full+tmpClose, { async: false }).replaceAll("\n", "&#10;")}\n\n`);
             tmpClose = '';
         }
         contextBank[instanceId].push({'role': 'assistant', 'content': checkBuffer, 'thinking': thinkingPart});
