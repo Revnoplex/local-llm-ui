@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import fs from 'fs';
 import multer from 'multer';
 import path from 'path';
+import katex from 'katex';
 
 interface VersionResponse {
     version: string
@@ -24,6 +25,42 @@ interface ContextBank {
 var contextBank: ContextBank = {};
 
 var attachmentQueue: string[] = [];
+
+const placeholders: string[] = [];
+
+marked.use({
+    hooks: {
+        preprocess(markdown: string): string {
+            placeholders.length = 0;
+
+            markdown = markdown.replace(/\$\$([\s\S]+?)\$\$/g, (_, tex: string) => {
+                placeholders.push(katex.renderToString(tex, { displayMode: true, throwOnError: false }));
+                return `@@MATH${placeholders.length - 1}@@`;
+            });
+
+            markdown = markdown.replace(/\\\[([\s\S]+?)\\\]/g, (_, tex: string) => {
+                placeholders.push(katex.renderToString(tex, { displayMode: true, throwOnError: false }));
+                return `@@MATH${placeholders.length - 1}@@`;
+            });
+
+            markdown = markdown.replace(/\$([^\$\n]+?)\$/g, (_, tex: string) => {
+                placeholders.push(katex.renderToString(tex, { displayMode: false, throwOnError: false }));
+                return `@@MATH${placeholders.length - 1}@@`;
+            });
+
+            markdown = markdown.replace(/\\\(([^\n]*?)\\\)/g, (_, tex: string) => {
+                placeholders.push(katex.renderToString(tex, { displayMode: false, throwOnError: false }));
+                return `@@MATH${placeholders.length - 1}@@`;
+            });
+
+            return markdown;
+        },
+
+        postprocess(html: string): string {
+            return html.replace(/@@MATH(\d+)@@/g, (_, i: string) => placeholders[+i] ?? '');
+        }
+    }
+});
 
 dotenv.config({ quiet: true });
 
@@ -97,6 +134,10 @@ function displayStatus(status: number | null = null, title: string | null = null
 app.use([/\.map$|\.d\.ts$/, '/js'], express.static('dist/client'));
 
 app.use(express.static('public'));
+
+app.use('/css/katex', express.static(
+    'node_modules/katex/dist'
+));
 
 app.get('/', async (req: Request, res: Response, next: NextFunction) => {
     if (typeof req.socket.remoteAddress === "string" && !(req.socket.remoteAddress in contextBank)) {
