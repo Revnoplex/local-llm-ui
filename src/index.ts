@@ -26,6 +26,12 @@ var contextBank: ContextBank = {};
 
 var attachmentQueue: string[] = [];
 
+function sanitizeLTX(tex: string): string {
+  return tex
+    .replace(/[\u202f\u2009\u200a\u2002\u2003\u2000\u2001\u2007\u200b\ufeff]/g, ' ')
+    .replace(/\u00a0/g, ' ');
+}
+
 const placeholders: string[] = [];
 
 marked.use({
@@ -34,22 +40,22 @@ marked.use({
             placeholders.length = 0;
 
             markdown = markdown.replace(/\$\$([\s\S]+?)\$\$/g, (_, tex: string) => {
-                placeholders.push(katex.renderToString(tex, { displayMode: true, throwOnError: false }));
+                placeholders.push(katex.renderToString(sanitizeLTX(tex), { displayMode: true, throwOnError: false }));
                 return `@@MATH${placeholders.length - 1}@@`;
             });
 
             markdown = markdown.replace(/\\\[([\s\S]+?)\\\]/g, (_, tex: string) => {
-                placeholders.push(katex.renderToString(tex, { displayMode: true, throwOnError: false }));
+                placeholders.push(katex.renderToString(sanitizeLTX(tex), { displayMode: true, throwOnError: false }));
                 return `@@MATH${placeholders.length - 1}@@`;
             });
 
             markdown = markdown.replace(/\$([^\$\n]+?)\$/g, (_, tex: string) => {
-                placeholders.push(katex.renderToString(tex, { displayMode: false, throwOnError: false }));
+                placeholders.push(katex.renderToString(sanitizeLTX(tex), { displayMode: false, throwOnError: false }));
                 return `@@MATH${placeholders.length - 1}@@`;
             });
 
             markdown = markdown.replace(/\\\(([^\n]*?)\\\)/g, (_, tex: string) => {
-                placeholders.push(katex.renderToString(tex, { displayMode: false, throwOnError: false }));
+                placeholders.push(katex.renderToString(sanitizeLTX(tex), { displayMode: false, throwOnError: false }));
                 return `@@MATH${placeholders.length - 1}@@`;
             });
 
