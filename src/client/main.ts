@@ -78,21 +78,32 @@ function writeResponse(content: string, button: HTMLElement | null, input: HTMLE
             responseP.scrollTop = responseP.scrollHeight;
         }
     }
-    if ((!content.includes('<p id="waitMsg">')) && button && button.textContent != "Generate Response") {
+    if ((!content.includes('<p id="waitMsg">')) && button && button.textContent != "Stop") {
         if (checkStatus) {
             setModelStatus(modelName, true);
             checkStatus = false;
         }
         button.removeAttribute('disabled');
-        button.textContent = "Generate Response";
-        if (input) {
-            input.removeAttribute('disabled');
-        }
+        button.textContent = "Stop";
     }
 }
 
 function handleClick() {
     const button = document.getElementById('requestButton');
+    if (button && button.textContent == "Stop") {
+        fetch(`/stop-instance?sessionId=${sessionId}`, {
+            method: "POST"
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP Error ${response.status}`);
+            }
+        })
+        .catch(error => {
+            console.error('Failed to request stop:', error);
+        });
+        return;
+    }
     if (button) {
         button.setAttribute('disabled', '');
         button.textContent = "Fetching Response...";
@@ -112,12 +123,24 @@ function handleClick() {
         const data = event.data as string;
         if (data == '[Done]') {
             attachment = '';
+            if (button && button.textContent == "Stop") {
+                button.textContent = "Generate Response";
+                if (input) {
+                    input.removeAttribute('disabled');
+                }
+            }
             eventSource.close();
             return;
         }
         if (data.startsWith('[Error]:')) {
             writeResponse(attachment+promptInput+"<p>"+event.data.replace("[Error]: ", "<strong>Couldn't Generate Response: </strong>")+"</p>", button, input, select.value);
             attachment = '';
+            if (button && button.textContent == "Stop") {
+                button.textContent = "Generate Response";
+                if (input) {
+                    input.removeAttribute('disabled');
+                }
+            }
             eventSource.close();
             return;
         }
@@ -128,11 +151,16 @@ function handleClick() {
         let errorMsg = "<p>An Error Occured</p>";
         console.error('EventSource error:', error);
         const target = error.target as EventSource;
-        EventSource.CONNECTING
         if (target.readyState === EventSource.CONNECTING) {
-            errorMsg = "<p>Lost Connection To Backend Or The Backend Encountered An Error!</p>"
+            errorMsg = "<p>Error: Connection To Backend Closed Unexpectedly!</p>"
         }
         writeResponse((responseP?.innerHTML || "")+errorMsg, button, input, select.value);
+        if (button && button.textContent == "Stop") {
+            button.textContent = "Generate Response";
+            if (input) {
+                input.removeAttribute('disabled');
+            }
+        }
         eventSource.close();
     };
 }

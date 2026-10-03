@@ -30,6 +30,8 @@ interface AttachmentQueue {
 
 var attachmentQueue: AttachmentQueue = {};
 
+var stopRequests = new Set<string>();
+
 function sanitizeLTX(tex: string): string {
   return tex
     .replace(/[\u202f\u2009\u200a\u2002\u2003\u2000\u2001\u2007\u200b\ufeff]/g, ' ')
@@ -341,6 +343,9 @@ app.get('/query-llm', async (req: Request, res: Response, next: NextFunction) =>
         let checkBuffer = '';
         let thinkingDone = false;
         for await (const part of response) {
+            if (stopRequests.delete(instanceId)) {
+                response.abort();
+            }
             checkBuffer += part.message.content;
             if (checkBuffer.includes("</think>")) {
                 thinkingDone = true;
@@ -372,7 +377,11 @@ app.get('/query-llm', async (req: Request, res: Response, next: NextFunction) =>
         }
         contextBank[instanceId].push({'role': 'assistant', 'content': checkBuffer, 'thinking': thinkingPart});
     } catch (error) {
-        if (error instanceof Error && (error.name === 'ResponseError' || error.cause)) {
+        if (error instanceof Error && error.name === 'AbortError') {
+            if (contextBank[instanceId]) {
+                contextBank[instanceId].push({'role': 'system', 'content': 'The user aborted the response.'});
+            }
+        } else if (error instanceof Error && (error.name === 'ResponseError' || error.cause)) {
             res.write(`data: [Error]: ${error instanceof Error ? error.cause ?? error.message : "Unknown Error"}\n\n`);
             res.end();
             return;
@@ -397,6 +406,13 @@ app.post('/register-attachment', upload.array('attachments[]'), async (req: Requ
         }
         attachmentQueue[instanceId].push(file.filename);
     }
+    res.status(204).send(displayStatus(204));
+});
+
+app.post('/stop-instance', async (req: Request, res: Response, next: NextFunction) => {
+    const sessionId = req.query?.sessionId;
+    const instanceId = (typeof sessionId === 'string' && sessionId !== '') ? sessionId : req.socket?.remoteAddress ?? "__error__";
+    stopRequests.add(instanceId);
     res.status(204).send(displayStatus(204));
 });
 
