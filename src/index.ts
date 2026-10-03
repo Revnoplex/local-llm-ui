@@ -24,7 +24,11 @@ interface ContextBank {
 
 var contextBank: ContextBank = {};
 
-var attachmentQueue: string[] = [];
+interface AttachmentQueue {
+  [key: string]: string[];
+}
+
+var attachmentQueue: AttachmentQueue = {};
 
 function sanitizeLTX(tex: string): string {
   return tex
@@ -291,6 +295,8 @@ app.get('/query-llm', async (req: Request, res: Response, next: NextFunction) =>
     const input = req.query.input;
     const model = req.query.model;
     const thinking = req.query?.thinking || 'false';
+    const sessionId = req.query?.sessionId;
+    const instanceId = (typeof sessionId === 'string' && sessionId !== '') ? sessionId : req.socket?.remoteAddress ?? "__error__";
     if ((!input) || !(model)) {
         res.status(400).send(displayStatus(400, null, "Input parameter is missing or blank"));
         return;
@@ -302,8 +308,8 @@ app.get('/query-llm', async (req: Request, res: Response, next: NextFunction) =>
     });
     res.write('data: <p id="waitMsg">Waiting for ollama server...</p>\n\n');
     let attachments: string[] = [];
-    while (attachmentQueue.length > 0) {
-        const attachmentFilename = attachmentQueue.shift();
+    while (attachmentQueue[instanceId] && attachmentQueue[instanceId].length > 0) {
+        const attachmentFilename = attachmentQueue[instanceId].shift();
         const imagePath = path.resolve(`attachments/${attachmentFilename}`);
         const imageBuffer = fs.readFileSync(imagePath);
         attachments.push(imageBuffer.toString('base64'));
@@ -319,7 +325,6 @@ app.get('/query-llm', async (req: Request, res: Response, next: NextFunction) =>
             content: `${input}`, 
             images: attachments
         };
-        const instanceId = req.socket?.remoteAddress ?? "__error__";
         contextBank[instanceId] ??= [];
         contextBank[instanceId].push(message);
         const response = await ollama.chat({
@@ -380,12 +385,17 @@ app.get('/query-llm', async (req: Request, res: Response, next: NextFunction) =>
 });
 
 app.post('/register-attachment', upload.array('attachments[]'), async (req: Request, res: Response, next: NextFunction) => {
+    const sessionId = req.query?.sessionId;
+    const instanceId = (typeof sessionId === 'string' && sessionId !== '') ? sessionId : req.socket?.remoteAddress ?? "__error__";
     if (!req.files) {
         res.status(400).send("Attachment is missing!");
         return;
     }
     for (const file of req.files as Express.Multer.File[]) {
-        attachmentQueue.push(file.filename);
+        if (!attachmentQueue[instanceId]) {
+            attachmentQueue[instanceId] = [];
+        }
+        attachmentQueue[instanceId].push(file.filename);
     }
     res.status(204).send(displayStatus(204));
 });

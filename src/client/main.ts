@@ -6,6 +6,9 @@ var checkStatus = false;
 var statusCheckTimeout: number = 0;
 const responseAnchor = document.createElement('div');
 responseAnchor.className = 'response-anchor';
+const sessionIdKey = "sessionId";
+const defaultSessionId = crypto.randomUUID();
+const sessionId: string = sessionStorage.getItem(sessionIdKey) ?? (sessionStorage.setItem(sessionIdKey, defaultSessionId), defaultSessionId);
 
 function checkOllamaStatus() {
     const ollamaStatus = document.getElementById('ollamaStatus') as HTMLParagraphElement;
@@ -101,7 +104,7 @@ function handleClick() {
         input.setAttribute('disabled', '');
     }
     setModelStatus(select.value, true);
-    const eventSource = new EventSource(`/query-llm?input=${input.value}&model=${select.value}&thinking=${thinkingCheckbox.checked && !thinkingCheckbox.hidden}`);
+    const eventSource = new EventSource(`/query-llm?sessionId=${sessionId}&input=${input.value}&model=${select.value}&thinking=${thinkingCheckbox.checked && !thinkingCheckbox.hidden}`);
     let promptInput = `<p>&gt; ${input.value}</p>`;
     input.value = '';
     checkStatus = true;
@@ -184,7 +187,7 @@ function registerAttachment(event: Event) {
             formData.append('attachments[]', firstFile, firstFile.name);
             successfulAttachments.push(firstFile.name);
         }
-        fetch(`/register-attachment`, {
+        fetch(`/register-attachment?sessionId=${sessionId}`, {
             method: "POST",
             body: formData
         })
