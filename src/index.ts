@@ -7,6 +7,7 @@ import fs from 'fs';
 import multer from 'multer';
 import path from 'path';
 import katex from 'katex';
+import crypto from 'crypto';
 
 interface VersionResponse {
     version: string
@@ -168,6 +169,7 @@ app.get('/', async (req: Request, res: Response, next: NextFunction) => {
         return
     }
     pageContents = pageContents.replaceAll("{title}", title);
+    pageContents = pageContents.replaceAll("{sessionId}", crypto.randomUUID());
 
     const charset: BufferEncoding = 'utf-8'
     res.writeHead(200, {

@@ -7,8 +7,15 @@ var statusCheckTimeout: number = 0;
 const responseAnchor = document.createElement('div');
 responseAnchor.className = 'response-anchor';
 const sessionIdKey = "sessionId";
-const defaultSessionId = crypto.randomUUID();
+
+declare global {
+    interface Window {
+        sessionId: string;
+    }
+}
+const defaultSessionId = "sessionId" in window ? window.sessionId : '';
 const sessionId: string = sessionStorage.getItem(sessionIdKey) ?? (sessionStorage.setItem(sessionIdKey, defaultSessionId), defaultSessionId);
+
 
 function checkOllamaStatus() {
     const ollamaStatus = document.getElementById('ollamaStatus') as HTMLParagraphElement;
