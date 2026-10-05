@@ -7,6 +7,7 @@ var statusCheckTimeout: number = 0;
 const responseAnchor = document.createElement('div');
 responseAnchor.className = 'response-anchor';
 const sessionIdKey = "sessionId";
+var currentEventSource: EventSource | null = null;
 
 declare global {
     interface Window {
@@ -44,13 +45,17 @@ function checkOllamaStatus() {
     }
 }
 
-function setModelStatus(modelName: string, assumeStarted: boolean = false) {
+function setModelStatus(modelName: string, assumeStarted: boolean = false, error: boolean = false) {
+    const modelStatus = document.getElementById("modelStatus") as HTMLParagraphElement;
+    if (error) {
+        modelStatus.textContent = `${modelName}: Error`;
+        return;
+    }
     checkOllamaStatus();
     if (statusCheckTimeout) {
         clearTimeout(statusCheckTimeout);
         statusCheckTimeout = 0;
     }
-    const modelStatus = document.getElementById("modelStatus") as HTMLParagraphElement;
     modelStatus.textContent = assumeStarted? `${modelName}: Starting`: `${modelName}: Offline`;
     fetch(`/api/list-running-models`)
     .then(response => {
@@ -108,6 +113,12 @@ function handleClick() {
         })
         .catch(error => {
             console.error('Failed to request stop:', error);
+            if (currentEventSource !== null) {
+                currentEventSource.close();
+            }
+            if (responseP) {
+                responseP.innerHTML=`<p><strong>Failed to stop instance:</strong> ${error}</p>`+(responseP?.innerHTML || "");
+            }
         });
         return;
     }
@@ -123,6 +134,7 @@ function handleClick() {
     }
     setModelStatus(select.value, true);
     const eventSource = new EventSource(`/api/query-llm?sessionId=${sessionId}&input=${input.value}&model=${select.value}&thinking=${thinkingCheckbox.checked && !thinkingCheckbox.hidden}`);
+    currentEventSource = eventSource;
     let promptInput = `<p>&gt; ${input.value}</p>`;
     input.value = '';
     checkStatus = true;
@@ -203,6 +215,10 @@ function fetchModelInfo(model: string) {
     .then((json) => processModelInfo(json as ShowResponse, model))
     .catch(error => {
         console.error('Unable to fetch model info:', error);
+        setModelStatus(model, false, true);
+        if (responseP) {
+            responseP.innerHTML=`<p><strong>Failed tp load model information:</strong> ${error}</p>`+(responseP?.innerHTML || "");
+        }
     });
 }
 
@@ -243,6 +259,9 @@ function registerAttachment(event: Event) {
         })
         .catch(error => {
             console.error('Failed to upload attachment:', error);
+            if (responseP) {
+                responseP.innerHTML=`<p><strong>Failed to upload attachment:</strong> ${error}</p>`+(responseP?.innerHTML || "");
+            }
         });
         
     }
