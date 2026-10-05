@@ -20,7 +20,7 @@ const sessionId: string = sessionStorage.getItem(sessionIdKey) ?? (sessionStorag
 function checkOllamaStatus() {
     const ollamaStatus = document.getElementById('ollamaStatus') as HTMLParagraphElement;
     if (ollamaStatus) {
-        fetch(`/get-version`)
+        fetch(`/api/get-version`)
         .then(response => {
             if (!response.ok) {
                 if (response.status == 502) {
@@ -52,7 +52,7 @@ function setModelStatus(modelName: string, assumeStarted: boolean = false) {
     }
     const modelStatus = document.getElementById("modelStatus") as HTMLParagraphElement;
     modelStatus.textContent = assumeStarted? `${modelName}: Starting`: `${modelName}: Offline`;
-    fetch(`/list-running-models`)
+    fetch(`/api/list-running-models`)
     .then(response => {
     if (!response.ok) {
         throw new Error(`HTTP Error ${response.status}`);
@@ -98,7 +98,7 @@ function writeResponse(content: string, button: HTMLElement | null, input: HTMLE
 function handleClick() {
     const button = document.getElementById('requestButton');
     if (button && button.textContent == "Stop") {
-        fetch(`/stop-instance?sessionId=${sessionId}`, {
+        fetch(`/api/stop-instance?sessionId=${sessionId}`, {
             method: "POST"
         })
         .then(response => {
@@ -122,7 +122,7 @@ function handleClick() {
         input.setAttribute('disabled', '');
     }
     setModelStatus(select.value, true);
-    const eventSource = new EventSource(`/query-llm?sessionId=${sessionId}&input=${input.value}&model=${select.value}&thinking=${thinkingCheckbox.checked && !thinkingCheckbox.hidden}`);
+    const eventSource = new EventSource(`/api/query-llm?sessionId=${sessionId}&input=${input.value}&model=${select.value}&thinking=${thinkingCheckbox.checked && !thinkingCheckbox.hidden}`);
     let promptInput = `<p>&gt; ${input.value}</p>`;
     input.value = '';
     checkStatus = true;
@@ -193,7 +193,7 @@ function processModelInfo(data: ShowResponse, modelName: string) {
 }
 
 function fetchModelInfo(model: string) {
-    fetch(`/probe-model?model=${model}`)
+    fetch(`/api/probe-model?model=${model}`)
     .then(response => {
     if (!response.ok) {
         throw new Error(`HTTP Error ${response.status}`);
@@ -222,7 +222,7 @@ function registerAttachment(event: Event) {
             formData.append('attachments[]', firstFile, firstFile.name);
             successfulAttachments.push(firstFile.name);
         }
-        fetch(`/register-attachment?sessionId=${sessionId}`, {
+        fetch(`/api/register-attachment?sessionId=${sessionId}`, {
             method: "POST",
             body: formData
         })
@@ -251,7 +251,7 @@ function registerAttachment(event: Event) {
 
 function populateSelect(element: HTMLSelectElement, retryElement: HTMLButtonElement) {
     checkOllamaStatus();
-    fetch(`/list-models`)
+    fetch(`/api/list-models`)
     .then(response => {
     if (!response.ok) {
         throw new Error(`HTTP Error ${response.status}`);

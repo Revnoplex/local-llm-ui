@@ -179,7 +179,7 @@ app.get('/', async (req: Request, res: Response, next: NextFunction) => {
     res.end(pageContents);
 });
 
-app.get('/probe-model', async (req: Request, res: Response, next: NextFunction) => {
+app.get('/api/probe-model', async (req: Request, res: Response, next: NextFunction) => {
     const model = req.query.model;
     if (!model) {
         res.status(400).send(displayStatus(400, null, "Model parameter is missing or blank"));
@@ -214,7 +214,7 @@ app.get('/probe-model', async (req: Request, res: Response, next: NextFunction) 
     
 });
 
-app.get('/list-models', async (req: Request, res: Response, next: NextFunction) => {
+app.get('/api/list-models', async (req: Request, res: Response, next: NextFunction) => {
     let modelList = null;
     let errorAck = false;
     try {
@@ -239,7 +239,7 @@ app.get('/list-models', async (req: Request, res: Response, next: NextFunction) 
     
 });
 
-app.get('/list-running-models', async (req: Request, res: Response, next: NextFunction) => {
+app.get('/api/list-running-models', async (req: Request, res: Response, next: NextFunction) => {
     let modelList = null;
     let errorAck = false;
     try {
@@ -264,7 +264,7 @@ app.get('/list-running-models', async (req: Request, res: Response, next: NextFu
     
 });
 
-app.get('/get-version', async (req: Request, res: Response, next: NextFunction) => {
+app.get('/api/get-version', async (req: Request, res: Response, next: NextFunction) => {
     let versionRes = null;
     let errorAck = false;
     const parsedOllamaServer = new URL(ollamaServer);
@@ -295,7 +295,7 @@ app.get('/get-version', async (req: Request, res: Response, next: NextFunction) 
     }
 });
 
-app.get('/query-llm', async (req: Request, res: Response, next: NextFunction) => {
+app.get('/api/query-llm', async (req: Request, res: Response, next: NextFunction) => {
     const input = req.query.input;
     const model = req.query.model;
     const thinking = req.query?.thinking || 'false';
@@ -395,7 +395,7 @@ app.get('/query-llm', async (req: Request, res: Response, next: NextFunction) =>
     res.end();
 });
 
-app.post('/register-attachment', upload.array('attachments[]'), async (req: Request, res: Response, next: NextFunction) => {
+app.post('/api/register-attachment', upload.array('attachments[]'), async (req: Request, res: Response, next: NextFunction) => {
     const sessionId = req.query?.sessionId;
     const instanceId = (typeof sessionId === 'string' && sessionId !== '') ? sessionId : req.socket?.remoteAddress ?? "__error__";
     if (!req.files) {
@@ -411,7 +411,7 @@ app.post('/register-attachment', upload.array('attachments[]'), async (req: Requ
     res.status(204).send(displayStatus(204));
 });
 
-app.post('/stop-instance', async (req: Request, res: Response, next: NextFunction) => {
+app.post('/api/stop-instance', async (req: Request, res: Response, next: NextFunction) => {
     const sessionId = req.query?.sessionId;
     const instanceId = (typeof sessionId === 'string' && sessionId !== '') ? sessionId : req.socket?.remoteAddress ?? "__error__";
     stopRequests.add(instanceId);
