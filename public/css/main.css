@@ -21,6 +21,7 @@
   );
   --global-btn-bg: light-dark(var(--global-primary), var(--global-secondary));
   --global-btn-hv: light-dark(var(--global-secondary), var(--global-primary));
+  --global-think: light-dark(rgb(80, 80, 80), rgb(175, 175, 175))
 }
 
 
@@ -129,12 +130,12 @@ code {
 
 think:before {
   font-weight: bold;
-  color: rgb(191, 191, 191);
+  color: var(--global-think);
   content:"Thinking...";
 }
 
 think * {
-    color: rgb(191, 191, 191);
+    color: var(--global-think);
 }
 
 .input-console{
