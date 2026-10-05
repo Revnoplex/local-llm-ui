@@ -217,7 +217,7 @@ function fetchModelInfo(model: string) {
         console.error('Unable to fetch model info:', error);
         setModelStatus(model, false, true);
         if (responseP) {
-            responseP.innerHTML=`<p><strong>Failed tp load model information:</strong> ${error}</p>`+(responseP?.innerHTML || "");
+            responseP.innerHTML=`<p><strong>Failed to load model information:</strong> ${error}</p>`+(responseP?.innerHTML || "");
         }
     });
 }
