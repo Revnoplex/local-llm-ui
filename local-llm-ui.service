@@ -1,0 +1,17 @@
+[Unit]
+Description=Systemd service for running local-llm-ui
+After=network.target
+
+[Service]
+AmbientCapabilities=CAP_NET_BIND_SERVICE # needed in order to use port 80
+ExecStart=/usr/bin/npm run start
+WorkingDirectory=/home/server-admin/local-llm-ui
+Environment="PORT=80" # Important: This will override the port set .env files
+StandardOutput=inherit
+StandardError=inherit
+Restart=on-failure
+User=server-admin
+Type=simple
+
+[Install]
+WantedBy=multi-user.target
