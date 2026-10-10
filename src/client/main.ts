@@ -309,6 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const upload = document.getElementById('fileInput') as HTMLInputElement;
     const themeSelect = document.getElementById('themeSelect') as HTMLSelectElement;
     const listModelsRetryButton = document.getElementById('listModelsRetryButton') as HTMLButtonElement;
+    const clearContextBtn = document.getElementById('clearContextBtn') as HTMLButtonElement;
     populateSelect(select, listModelsRetryButton);
     if (button) {
         button.addEventListener('click', handleClick);
@@ -360,6 +361,30 @@ document.addEventListener('DOMContentLoaded', () => {
             option.className = 'modelOption';
             select.add(option);
             populateSelect(select, listModelsRetryButton);
+        });
+    }
+    if (clearContextBtn) {
+        clearContextBtn.addEventListener('click', (_: Event) => {
+            console.log(sessionId);
+            fetch(`/api/clear-context/${sessionId}`, {
+                method: "DELETE"
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP Error ${response.status}`);
+                }
+            })
+            .then(_ => {
+                if (responseP) {
+                    responseP.innerHTML=`<p><strong>Cleared context for this session</strong></p>`+(responseP?.innerHTML || "");
+                }
+            })
+            .catch(error => {
+                console.error('Failed to clear context:', error);
+                if (responseP) {
+                    responseP.innerHTML=`<p><strong>Failed to clear context:</strong> ${error}</p>`+(responseP?.innerHTML || "");
+                }
+            });
         });
     }
 });

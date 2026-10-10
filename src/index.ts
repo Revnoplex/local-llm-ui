@@ -153,9 +153,7 @@ app.use('/css/katex', express.static(
 ));
 
 app.get('/', async (req: Request, res: Response, next: NextFunction) => {
-    if (typeof req.socket.remoteAddress === "string" && !(req.socket.remoteAddress in contextBank)) {
-        contextBank[req.socket.remoteAddress] = [];
-    }
+    const instanceId = crypto.randomUUID()
     const title = "Local LLM UI";
     let pageContents: string;
     try {
@@ -169,7 +167,7 @@ app.get('/', async (req: Request, res: Response, next: NextFunction) => {
         return
     }
     pageContents = pageContents.replaceAll("{title}", title);
-    pageContents = pageContents.replaceAll("{sessionId}", crypto.randomUUID());
+    pageContents = pageContents.replaceAll("{sessionId}", instanceId);
 
     const charset: BufferEncoding = 'utf-8'
     res.writeHead(200, {
@@ -415,6 +413,13 @@ app.post('/api/stop-instance', async (req: Request, res: Response, next: NextFun
     const sessionId = req.query?.sessionId;
     const instanceId = (typeof sessionId === 'string' && sessionId !== '') ? sessionId : req.socket?.remoteAddress ?? "__error__";
     stopRequests.add(instanceId);
+    res.status(204).send(displayStatus(204));
+});
+
+app.delete("/api/clear-context/:sessionId", async (req: Request, res: Response, next: NextFunction) => {
+    const sessionId = req.params.sessionId;
+    const instanceId = (typeof sessionId === 'string' && sessionId !== '') ? sessionId : req.socket?.remoteAddress ?? "__error__";
+    contextBank[instanceId] = [];
     res.status(204).send(displayStatus(204));
 });
 
