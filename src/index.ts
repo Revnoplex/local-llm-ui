@@ -299,6 +299,7 @@ app.get('/api/query-llm', async (req: Request, res: Response, next: NextFunction
     const thinking = req.query?.thinking || 'false';
     const sessionId = req.query?.sessionId;
     const instanceId = (typeof sessionId === 'string' && sessionId !== '') ? sessionId : req.socket?.remoteAddress ?? "__error__";
+    const keepAlive = req.query.keepAlive;
     if ((!input) || !(model)) {
         res.status(400).send(displayStatus(400, null, "Input parameter is missing or blank"));
         return;
@@ -334,6 +335,7 @@ app.get('/api/query-llm', async (req: Request, res: Response, next: NextFunction
             messages: contextBank[instanceId],
             stream: true,
             think: thinking === 'true',
+            keep_alive: typeof keepAlive === "string" && Number.isInteger(Number(keepAlive)) ? Number(keepAlive) : 300
         });
         let full = '';
         let thinkingPart = '';

@@ -9,7 +9,20 @@
     </head>
     <body>
         <div class="status-bar">
-            <p id="modelStatus" class="status-bar-element">Model Status Will Appear here</p>
+            <div class="status-bar-element" style="display: flex; align-items: center;">
+            <p id="modelStatus">Model Status Will Appear here</p>
+            &emsp;
+            <label for="keepAliveSelect">Keep Alive:&nbsp;</label>
+            <select name="keepAliveOptions" id="keepAliveSelect">
+                <option class='keepAliveOption' value="0"class="status-bar-element">Shutdown immediately</option>
+                <option class='keepAliveOption' value="60"class="status-bar-element">1 minute</option>
+                <option class='keepAliveOption' value="300" selected class="status-bar-element">5 minutes</option>
+                <option class='keepAliveOption' value="600"class="status-bar-element">10 minutes</option>
+                <option class='keepAliveOption' value="1800"class="status-bar-element">30 minutes</option>
+                <option class='keepAliveOption' value="3600"class="status-bar-element">1 hour</option>
+                <option class='keepAliveOption' value="-1"class="status-bar-element">Indefinately</option>
+            </select>
+            </div>
             <h1 style='text-align: center;'>{title}</h1>
             <p id="ollamaStatus" class="status-bar-element" style="text-align: right">Connecting to ollama server....</p>
             &emsp;

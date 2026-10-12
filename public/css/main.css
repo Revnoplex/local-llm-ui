@@ -241,6 +241,23 @@ think * {
 
 }
 
+#keepAliveSelect {
+  color: var(--global-text);
+  background-color: transparent;
+  border: 2px solid var(--global-border);
+  padding: 5px;
+  /* text-align: center; */
+  font-size: 1em;
+  text-decoration: none;
+  display: inline-block;
+  border-radius: 10px;
+}
+
+.keepAliveOption {
+  background-color: var(--global-bg);
+
+}
+
 #thinkingCheckbox {
   accent-color: rgb(80, 80, 235);
 }

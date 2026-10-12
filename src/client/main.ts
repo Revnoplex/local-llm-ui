@@ -129,11 +129,14 @@ function handleClick() {
     const select = document.getElementById('modelSelect') as HTMLSelectElement;
     const input = document.getElementById('requestInput') as HTMLInputElement;
     const thinkingCheckbox = document.getElementById('thinkingCheckbox') as HTMLInputElement;
+    const keepAlive = document.getElementById('keepAliveSelect') as HTMLSelectElement;
     if (input) {
         input.setAttribute('disabled', '');
     }
     setModelStatus(select.value, true);
-    const eventSource = new EventSource(`/api/query-llm?sessionId=${sessionId}&input=${input.value}&model=${select.value}&thinking=${thinkingCheckbox.checked && !thinkingCheckbox.hidden}`);
+    const eventSource = new EventSource(
+        `/api/query-llm?keepAlive=${keepAlive?.value ?? "300"}&sessionId=${sessionId}&input=${input.value}&model=${select.value}&thinking=${thinkingCheckbox.checked && !thinkingCheckbox.hidden}`
+    );
     currentEventSource = eventSource;
     let promptInput = `<p>&gt; ${input.value}</p>`;
     input.value = '';
